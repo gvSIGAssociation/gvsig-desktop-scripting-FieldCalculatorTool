@@ -1,0 +1,15 @@
+[script]
+enable = true
+
+[Unit]
+type = Script
+name = fctool
+description = 
+createdBy = 
+version = 
+
+[Script]
+main = main
+Lang = python
+enable = true
+
