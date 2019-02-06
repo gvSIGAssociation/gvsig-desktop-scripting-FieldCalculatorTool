@@ -1,7 +1,7 @@
 #
-#Wed Jan 23 15:42:16 CET 2019
-owner=
-code=QuickSnappingTool
+#Tue Feb 05 21:03:05 CET 2019
+owner=gvSIG Association
+code=FieldCalculatorTool
 java-version=j1_7
 official=true
 type=Script
@@ -14,9 +14,9 @@ web-url=
 architecture=all
 model-version=1.0.1
 categories=
-description=Quick access to Snapping Tool
+description=Tool to calculate fields with the expression builder tool.
 owner-url=
 buildNumber=0
-download-url=https\://github.com/gvSIGAssociation/gvsig-desktop-scripting-QuickSnappingTool/releases/download/1.0.0-0/gvSIG-desktop-2.5.0-QuickSnappingTool-1.0.0-0-testing-all-all-j1_7.gvspkg
+download-url=https\://github.com/gvSIGAssociation/gvsig-desktop-scripting-FieldCalculatorTool/releases/download/1.0.0-0/gvSIG-desktop-2.5.0-FieldCalculatorTool-1.0.0-0-testing-all-all-j1_7.gvspkg
 gvSIG-version=2.5.0
-name=Quick access to Snapping Tool
+name=Field Calculator Tool

@@ -70,7 +70,7 @@ class FieldCalculatorToolExtension(ScriptingExtension):
         exp = builder.getExpression()
       else: 
         return
-         
+      
       window = PluginServices.getMDIManager().getActiveWindow()
       if isinstance(window, FeatureTableDocumentPanel):
         selected = window.getTablePanel().getTable().getSelectedColumnsAttributeDescriptor()
@@ -84,7 +84,10 @@ class FieldCalculatorToolExtension(ScriptingExtension):
         fst = DALLocator.getDataManager().createFeatureSymbolTable()
         s.addSymbolTable(fst)
         store.edit()
-        fset = store.getFeatureSet()
+        if store.getSelection().getSize()==0:
+          fset = store.getFeatureSet()
+        else:
+          fset = store.getSelection()
         count = 0
         for f in fset:
           fst.setFeature(f)
