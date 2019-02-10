@@ -26,8 +26,15 @@ from org.gvsig.andami import PluginServices
 from org.gvsig.expressionevaluator import ExpressionEvaluatorLocator
 
 from org.gvsig.fmap.dal import DALLocator
+import thread
+from java.awt.event import ActionListener
+from org.gvsig.app.project.documents.table import TableManager
 
-class FieldCalculatorToolExtension(ScriptingExtension):
+import fieldCalculatorTool
+reload(fieldCalculatorTool)
+from fieldCalculatorTool import FieldCalculatorTool
+
+class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
     def __init__(self):
       pass
       
@@ -46,90 +53,83 @@ class FieldCalculatorToolExtension(ScriptingExtension):
       return isinstance(PluginServices.getMDIManager().getActiveWindow(), FeatureTableDocumentPanel)
       
     def execute(self,actionCommand, *args):
-      builder = ExpressionEvaluatorSwingLocator.getManager().createJExpressionBuilder() #this.manager, this.config);
-      #panel.setExpression(this.value);
-      store = gvsig.currentDocument().getFeatureStore()
-      builder.addSymbolTable(DataManager.FEATURE_SYMBOL_TABLE)
-      swingManager = ExpressionEvaluatorSwingLocator.getManager()
-      builder.addElement(
-        swingManager.createElement(
-            DataSwingManager.FEATURE_STORE_EXPRESSION_ELEMENT,
-            builder,
-            store
-        )
-      )
+      self.store = gvsig.currentDocument().getFeatureStore()
+      name = self.store.getName()
+      self.taskStatus = ToolsLocator.getTaskStatusManager().createDefaultSimpleTaskStatus(name)
       windowManager = ToolsSwingLocator.getWindowManager()
-      dialog = windowManager.createDialog(
-                builder.asJComponent(),
+      self.tool = FieldCalculatorTool(self.store)
+
+      self.expBuilder = self.tool.getExpBuilder()
+      self.expFilter = self.tool.getExpFilter()
+
+      self.dialog = windowManager.createDialog(
+                self.tool.asJComponent(),
                 "Expression builder",
                 None, 
-                WindowManager_v2.BUTTONS_OK_CANCEL
+                WindowManager_v2.BUTTONS_APPLY_OK_CANCEL
       )
-      dialog.show(WindowManager.MODE.DIALOG);
-      if dialog.getAction()==WindowManager_v2.BUTTON_OK:
-        exp = builder.getExpression()
-      else: 
-        return
-      
-      window = PluginServices.getMDIManager().getActiveWindow()
-      if isinstance(window, FeatureTableDocumentPanel):
-        selected = window.getTablePanel().getTable().getSelectedColumnsAttributeDescriptor()
-        if len(selected)<1:
+      self.dialog.addActionListener(self)
+      self.dialog.show(WindowManager.MODE.WINDOW)
+ 
+    def actionPerformed(self,*args):
+        if self.dialog.getAction()==WindowManager_v2.BUTTON_CANCEL:
           return
-  
-        columnSelected = selected[0]
+        self.expBuilderExpression = self.expBuilder.getExpression()
+        self.expFilterExpression = self.expFilter.get()
+        table = gvsig.currentDocument(TableManager.TYPENAME)
+        if table!=None:
+          #selected = table.getMainWindow().getTablePanel().getTable().getSelectedColumnsAttributeDescriptor()
+          #if len(selected)<1: return
+          columnSelected = self.tool.getFieldName()
+          thread.start_new_thread(self.process, (columnSelected, self.store, self.expBuilderExpression, self.expFilterExpression))
+
+    def process(self, columnSelected, store, exp,  expFilter):
+        if store.isEditing():
+          commitingMode = False
+        else:
+          commitingMode = True
         ftype = store.getDefaultFeatureType()
-  
         s =  ExpressionEvaluatorLocator.getManager().createSymbolTable()
         fst = DALLocator.getDataManager().createFeatureSymbolTable()
         s.addSymbolTable(fst)
         store.edit()
         if store.getSelection().getSize()==0:
-          fset = store.getFeatureSet()
+          if expFilter.getPhrase() != "":
+            fq = store.createFeatureQuery()
+            fq.addFilter(expFilter)
+            fq.retrievesAllAttributes()
+            fset = store.getFeatureSet(fq)
+          else:
+            fset = store.getFeatureSet()
         else:
           fset = store.getSelection()
-        count = 0
-        for f in fset:
-          fst.setFeature(f)
-          v = exp.execute(s) # value de la expression
-          c = f.getEditable()
-          c.set(columnSelected.getName(), v)
-          fset.update(c)
-
-def testApplyExpression():
-    phrase = "3*3"
-    exp = ExpressionEvaluatorLocator.getManager().createExpression()
-    exp.setPhrase(phrase)
-    
-    store = gvsig.currentDocument().getFeatureStore()
-    window = PluginServices.getMDIManager().getActiveWindow()
-    if isinstance(window, FeatureTableDocumentPanel):
-      selected = window.getTablePanel().getTable().getSelectedColumnsAttributeDescriptor()
-      if len(selected)<1:
-        return
-
-      columnSelected = selected[0]
-      ftype = store.getDefaultFeatureType()
-
-      s =  ExpressionEvaluatorLocator.getManager().createSymbolTable()
-      fst = DALLocator.getDataManager().createFeatureSymbolTable()
-      s.addSymbolTable(fst)
-      store.edit()
-      fset = store.getFeatureSet()
-      for f in fset:
-        fst.setFeature(f)
-        v = exp.execute(s) # value de la expression
-        c = f.getEditable()
-        c.set(columnSelected.getName(), v)
-        fset.update(c)
-
-
-    
-      
-      
-    else:
-      print "not"
-     
+          
+        try:
+          self.taskStatus.setRangeOfValues(0, fset.getSize())
+          self.taskStatus.setCurValue(0)
+          self.taskStatus.setAutoremove(True)
+          self.taskStatus.add()
+          count = 0
+          for f in fset:
+            fst.setFeature(f)
+            v = exp.execute(s) # value de la expression
+            c = f.getEditable()
+            c.set(columnSelected, v)
+            fset.update(c)
+            if commitingMode:
+              if count % 100000==0:
+                fset.commitChanges()
+            count +=1
+            self.taskStatus.setCurValue(count)
+            #self.taskStatus.incrementCurrentValue()
+          if commitingMode:
+            store.finishEditing()
+        except Exception, ex:
+          if commitingMode:
+            store.cancelEditing()
+        finally:
+          fset.dispose()
+          self.taskStatus.terminate()
       
         
 def main(*args):
