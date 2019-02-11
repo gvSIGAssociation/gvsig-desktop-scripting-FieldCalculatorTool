@@ -42,8 +42,10 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
       return True
   
     def isEnabled(self,action):
-      doc = gvsig.currentDocument(TableManager.TYPENAME).getMainWindow()
-      return isinstance(doc, FeatureTableDocumentPanel)
+      if gvsig.currentDocument(TableManager.TYPENAME)!=None:
+        doc = gvsig.currentDocument(TableManager.TYPENAME).getMainWindow()
+        return isinstance(doc, FeatureTableDocumentPanel)
+      return False
       
       #window = PluginServices.getMDIManager().getActiveWindow()
       #if isinstance(window, FeatureTableDocumentPanel):
@@ -53,8 +55,10 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
       #return False
       
     def isVisible(self,action):
-      doc = gvsig.currentDocument(TableManager.TYPENAME).getMainWindow()
-      return isinstance(doc, FeatureTableDocumentPanel)
+      if gvsig.currentDocument(TableManager.TYPENAME)!=None:
+        doc = gvsig.currentDocument(TableManager.TYPENAME).getMainWindow()
+        return isinstance(doc, FeatureTableDocumentPanel)
+      return False
       
     def execute(self,actionCommand, *args):
       self.store = gvsig.currentDocument().getFeatureStore()
