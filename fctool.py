@@ -54,7 +54,9 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
       
     def execute(self,actionCommand, *args):
       self.store = gvsig.currentDocument().getFeatureStore()
-      name = self.store.getName()
+      i18nManager = ToolsLocator.getI18nManager()
+      
+      name = i18nManager.getTranslation("_Field_Calculator_Tool")+ ": " + self.store.getName()
       self.taskStatus = ToolsLocator.getTaskStatusManager().createDefaultSimpleTaskStatus(name)
       windowManager = ToolsSwingLocator.getWindowManager()
       self.tool = FieldCalculatorTool(self.store)
@@ -64,7 +66,7 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
 
       self.dialog = windowManager.createDialog(
                 self.tool.asJComponent(),
-                "Expression builder",
+                name,
                 None, 
                 WindowManager_v2.BUTTONS_APPLY_OK_CANCEL
       )
