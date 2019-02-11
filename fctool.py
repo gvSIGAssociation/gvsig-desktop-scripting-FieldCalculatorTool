@@ -42,15 +42,19 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
       return True
   
     def isEnabled(self,action):
-      window = PluginServices.getMDIManager().getActiveWindow()
-      if isinstance(window, FeatureTableDocumentPanel):
-        columnSelected = window.getTablePanel().getTable().getSelectedColumnCount()
-        if columnSelected > 0 and window.getModel().getStore().isEditing():
-          return True
-      return False
+      doc = gvsig.currentDocument(TableManager.TYPENAME).getMainWindow()
+      return isinstance(doc, FeatureTableDocumentPanel)
+      
+      #window = PluginServices.getMDIManager().getActiveWindow()
+      #if isinstance(window, FeatureTableDocumentPanel):
+      #  columnSelected = window.getTablePanel().getTable().getSelectedColumnCount()
+      #  if columnSelected > 0 and window.getModel().getStore().isEditing():
+      #    return True
+      #return False
       
     def isVisible(self,action):
-      return isinstance(PluginServices.getMDIManager().getActiveWindow(), FeatureTableDocumentPanel)
+      doc = gvsig.currentDocument(TableManager.TYPENAME).getMainWindow()
+      return isinstance(doc, FeatureTableDocumentPanel)
       
     def execute(self,actionCommand, *args):
       self.store = gvsig.currentDocument().getFeatureStore()

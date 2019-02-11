@@ -26,8 +26,8 @@
    </super>
    <at name="id">/home/osc/gvSIG/plugins/org.gvsig.scripting.app.mainplugin/2.5.0/scripts/addons/FieldCalculatorTool/fieldCalculatorTool.xml</at>
    <at name="path">addons/FieldCalculatorTool/fieldCalculatorTool.xml</at>
-   <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:8PX:NONE,FILL:PREF:GROW(1.0),CENTER:5PX:NONE,CENTER:39PX:NONE</at>
-   <at name="colspecs">FILL:DEFAULT:NONE,FILL:565PX:GROW(1.0),FILL:DEFAULT:NONE</at>
+   <at name="rowspecs">CENTER:DEFAULT:NONE,CENTER:DEFAULT:NONE,CENTER:8PX:NONE,FILL:PREF:GROW(1.0),CENTER:5PX:NONE,CENTER:54PX:NONE</at>
+   <at name="colspecs">FILL:DEFAULT:NONE,FILL:PREF:GROW(1.0),FILL:DEFAULT:NONE</at>
    <at name="components">
     <object classname="java.util.LinkedList">
      <item >
@@ -55,8 +55,8 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="name">pnl1</at>
-            <at name="width">716</at>
-            <at name="height">470</at>
+            <at name="width">725</at>
+            <at name="height">570</at>
            </object>
           </at>
          </object>
@@ -81,7 +81,7 @@
          </at>
          <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
         </super>
-        <at name="id">embedded.242637144</at>
+        <at name="id">embedded.227429525</at>
         <at name="rowspecs">CENTER:DEFAULT:NONE</at>
         <at name="colspecs">FILL:161PX:NONE,FILL:DEFAULT:NONE,FILL:250PX:NONE</at>
         <at name="components">
@@ -130,7 +130,7 @@
                    </at>
                   </object>
                  </at>
-                 <at name="name"></at>
+                 <at name="name">lblField</at>
                  <at name="width">157</at>
                  <at name="text">_update_field</at>
                  <at name="fill">
@@ -304,8 +304,8 @@
          </at>
          <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
         </super>
-        <at name="id">embedded.Q56ddd3eC168d0309061UF7fff</at>
-        <at name="rowspecs">CENTER:36PX:NONE</at>
+        <at name="id">embedded.282202658</at>
+        <at name="rowspecs">CENTER:33PX:NONE,CENTER:6PX:NONE</at>
         <at name="colspecs">FILL:160PX:NONE,FILL:18PX:NONE,FILL:249PX:NONE</at>
         <at name="components">
          <object classname="java.util.LinkedList">
@@ -353,7 +353,7 @@
                    </at>
                   </object>
                  </at>
-                 <at name="name"></at>
+                 <at name="name">lblFilter</at>
                  <at name="width">156</at>
                  <at name="text">_filter</at>
                  <at name="fill">
@@ -386,7 +386,7 @@
               </at>
               <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
              </super>
-             <at name="id">embedded.1075816696</at>
+             <at name="id">embedded.318647358</at>
              <at name="rowspecs">CENTER:DEFAULT:NONE</at>
              <at name="colspecs">FILL:216PX:GROW(1.0),FILL:30PX:NONE</at>
              <at name="components">
@@ -609,6 +609,26 @@
               <at name="name">scollBars</at>
               <at name="verticalpolicy">21</at>
               <at name="horizontalpolicy">31</at>
+              <at name="border">
+               <object classname="com.jeta.forms.store.properties.CompoundBorderProperty">
+                <super classname="com.jeta.forms.store.properties.BorderProperty">
+                 <at name="name">border</at>
+                </super>
+                <at name="borders">
+                 <object classname="java.util.LinkedList">
+                  <item >
+                   <at name="value">
+                    <object classname="com.jeta.forms.store.properties.DefaultBorderProperty">
+                     <super classname="com.jeta.forms.store.properties.BorderProperty">
+                      <at name="name">border</at>
+                     </super>
+                    </object>
+                   </at>
+                  </item>
+                 </object>
+                </at>
+               </object>
+              </at>
              </object>
             </at>
            </object>
@@ -618,8 +638,11 @@
         <at name="cellpainters">
          <object classname="com.jeta.forms.store.support.Matrix">
           <at name="rows">
-           <object classname="[Ljava.lang.Object;" size="1">
+           <object classname="[Ljava.lang.Object;" size="2">
             <at name="item" index="0">
+             <object classname="[Ljava.lang.Object;" size="3"/>
+            </at>
+            <at name="item" index="1">
              <object classname="[Ljava.lang.Object;" size="3"/>
             </at>
            </object>
@@ -660,7 +683,7 @@
          </at>
         </object>
        </at>
-       <at name="name"/>
+       <at name="name"></at>
        <at name="fill">
         <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
          <at name="name">fill</at>

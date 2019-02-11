@@ -7,12 +7,16 @@ from java.awt import BorderLayout
 from org.gvsig.fmap.dal.swing import DALSwingLocator
 from org.gvsig.fmap.dal.swing import DataSwingManager
 from org.gvsig.fmap.dal import DataManager
+from org.gvsig.tools import ToolsLocator
 
 class FieldCalculatorTool(FormPanel):
   def __init__(self, store):
     FormPanel.__init__(self,gvsig.getResource(__file__,"fieldCalculatorTool.xml"))
     self.store = store
-                
+    # Update
+    i18nManager = ToolsLocator.getI18nManager()
+    self.lblField.setText(i18nManager.getTranslation("_update_field"))
+    self.lblFilter.setText(i18nManager.getTranslation("_filter_to_apply"))
     # Expression
     self.expBuilder = ExpressionEvaluatorSwingLocator.getManager().createJExpressionBuilder()
     self.expBuilder.addSymbolTable(DataManager.FEATURE_SYMBOL_TABLE)
