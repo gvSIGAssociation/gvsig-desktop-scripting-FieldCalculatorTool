@@ -4,13 +4,14 @@ import gvsig
 
 from org.gvsig.andami import PluginsLocator
 from org.gvsig.app import ApplicationLocator
-from fctool import FieldCalculatorToolExtension
+from addons.FieldCalculatorTool.fctool import FieldCalculatorToolExtension
 
 from java.io import File
 from org.gvsig.tools.swing.api import ToolsSwingLocator
 
 from gvsig import getResource
 from org.gvsig.tools import ToolsLocator
+from addons.FieldCalculatorTool.fieldCalculatorToolPreferences import FieldCalculatorToolPreferences
 
 def selfRegister():
   application = ApplicationLocator.getManager()
@@ -40,7 +41,13 @@ def selfRegister():
 def selfRegisterI18n():
   i18nManager = ToolsLocator.getI18nManager()
   i18nManager.addResourceFamily("text",File(getResource(__file__,"i18n")))
+
+def selfRegisterPreferences():
+  extensionPointsManager = ToolsLocator.getExtensionPointManager()
+  ep = extensionPointsManager.add("AplicationPreferences", "")
+  ep.append("fieldExpression", "",FieldCalculatorToolPreferences())
   
 def main(*args):
   selfRegisterI18n()
   selfRegister()
+  selfRegisterPreferences()
