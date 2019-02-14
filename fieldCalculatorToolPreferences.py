@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 import gvsig
-from gvsig.libs.formpanel import FormPanel
+from gvsig.libs.formpanel import FormPanel, load_icon
 from org.gvsig.andami.preferences import AbstractPreferencePage
 from org.gvsig.tools import ToolsLocator
 from java.util.prefs import Preferences
@@ -14,22 +14,11 @@ class FCTPanel(FormPanel):
       self.prefs = prefs
       FormPanel.__init__(self, gvsig.getResource(__file__, "fieldCalculatorToolPreferences.xml"))
       self.i18nManager = ToolsLocator.getI18nManager()
-      self.lblTitle.setText(self.i18nManager.getTranslation("limit_rows_in_memory"))
       self.lblOptionLimit.setText(self.i18nManager.getTranslation("limit_rows_in_memory"))
-      self.chbNoLimit.setText(self.i18nManager.getTranslation("limit_rows_in_memory"))
-      self.lblIcon.setIcon(self.load_icon(gvsig.getResource(__file__,"images","expression-field-preferences.png")))
-      self.txtExplanation.setBounds(Rectangle(13,7,285,57))
-      self.txtExplanation.setForeground(Color.black)
-      self.txtExplanation.setBackground(SystemColor.control)
-      self.txtExplanation.setRows(3)
-      self.txtExplanation.setWrapStyleWord(True)
-      self.txtExplanation.setLineWrap(True)
-      self.txtExplanation.setEditable(False)
-      self.txtExplanation.setBorder(BorderFactory.createEmptyBorder())
-      self.txtExplanation.setOpaque(False) 
-      self.txtExplanation.setText(self.i18nManager.getTranslation("specifies_the_limit_rows_in_memory_when_the_program_eval_the_expression"))
+      self.chbNoLimit.setText(self.i18nManager.getTranslation("without_limit"))
+      #self.lblIcon.setIcon(self.load_icon()
+      self.lblExplanation.setText("<html>"+self.i18nManager.getTranslation("specifies_the_limit_rows_in_memory_when_the_program_eval_the_expression")+"</html>")
 
-      
       # Init
       if prefs!=None:
         self.initializeDefaults()
@@ -102,9 +91,8 @@ class FieldCalculatorToolPreferences(AbstractPreferencePage):
   def initializeDefaults(self):
     self.fctPanel.initializeDefaults()
     
-    
   def getIcon(self):
-    return None
+    return load_icon(gvsig.getResource(__file__,"images","expression-field-preferences.png"))
     
   def isValueChanged(self):
     return True
@@ -113,6 +101,9 @@ class FieldCalculatorToolPreferences(AbstractPreferencePage):
     self.fctPanel.storeValues()
   def setChangesApplied(self):
     self.setChanged(False)
+  def isResizeable(self):
+    return True
+
     
 def main(*args):
     l = FieldCalculatorToolPreferences()

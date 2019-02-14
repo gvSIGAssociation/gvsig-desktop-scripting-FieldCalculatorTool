@@ -13,6 +13,7 @@ from gvsig import LOGGER_WARN,LOGGER_INFO,LOGGER_ERROR
 from org.gvsig.fmap.dal import DALLocator
 from javax.swing import ButtonGroup
 from javax.swing.event import ChangeListener
+from org.gvsig.tools.swing.api import ToolsSwingLocator
 
 class SelectionRadioChangeListener(ChangeListener):
   def __init__(self, lblSelection):
@@ -22,7 +23,6 @@ class SelectionRadioChangeListener(ChangeListener):
     aModel = aButton.getModel()
     selected = aModel.isSelected()
     self.lblSelection.setEnabled(selected)
-
 
 class PickerRadioChangeListener(ChangeListener):
   def __init__(self, lblFilter, picker):
@@ -36,9 +36,18 @@ class PickerRadioChangeListener(ChangeListener):
     self.lblFilter.setEnabled(selected)
 
 class FieldCalculatorTool(FormPanel):
-  def __init__(self, store, fcTaskStatus=None, defaultField=None):
+  def __init__(self, store, taskStatus=None, defaultField=None):
+    
     FormPanel.__init__(self,gvsig.getResource(__file__,"fieldCalculatorTool.xml"))
     self.store = store
+    self.taskStatus = taskStatus
+    ## Prepare bind taskTool
+    if taskStatus!=None:
+      self.fcTaskStatus = ToolsSwingLocator.getTaskStatusSwingManager().createJTaskStatus()
+      self.fcTaskStatus.setShowRemoveTaskButton(False)
+      self.fcTaskStatus.bind(self.taskStatus)
+    else:
+      self.fcTaskStatus = None
     # Update
     i18nManager = ToolsLocator.getI18nManager()
     self.lblField.setText(i18nManager.getTranslation("_update_field"))
@@ -63,7 +72,7 @@ class FieldCalculatorTool(FormPanel):
       featureSymbolTable.setFeature(sampleFeature);
       self.expBuilder.setPreviewSymbolTable(featureSymbolTable.createParent())
       
-    self.expBuilder.addSymbolTable(DataManager.FEATURE_SYMBOL_TABLE)
+    #self.expBuilder.addSymbolTable(DataManager.FEATURE_SYMBOL_TABLE)
     swingManager = ExpressionEvaluatorSwingLocator.getManager()
     element = swingManager.createElement(
                 DataSwingManager.FEATURE_STORE_EXPRESSION_ELEMENT,
@@ -76,9 +85,9 @@ class FieldCalculatorTool(FormPanel):
     self.pnl1.updateUI()
 
     # Task status
-    if fcTaskStatus!=None:
+    if self.fcTaskStatus!=None:
       self.pnlTaskStatus.setLayout(BorderLayout())
-      self.pnlTaskStatus.add(fcTaskStatus.asJComponent())
+      self.pnlTaskStatus.add(self.fcTaskStatus.asJComponent())
       self.pnlTaskStatus.updateUI()
     
     # Filter picker
@@ -95,7 +104,11 @@ class FieldCalculatorTool(FormPanel):
     # Combo picker
     self.pickerField = DALSwingLocator.getSwingManager().createAttributeDescriptorPickerController(self.cmbField)
     ftype = self.store.getDefaultFeatureType()
-    self.pickerField.setFeatureType(ftype)
+    newftype = gvsig.createFeatureType()
+    for ft in ftype:
+      if not ft.isComputed():
+        newftype.add(ft)
+    self.pickerField.setFeatureType(newftype)
     if defaultField!=None:
       self.pickerField.set(defaultField)
     else:
@@ -110,12 +123,13 @@ class FieldCalculatorTool(FormPanel):
     self.lblSelection.setEnabled(False)
     self.rdbFilter.addChangeListener(PickerRadioChangeListener(self.lblFilter, self.expFilter))
     self.rdbSelection.addChangeListener(SelectionRadioChangeListener(self.lblSelection))
-
+    
     bgroup = ButtonGroup()
     #self.rdbFilter.setEnabled(True)
     
     bgroup.add(self.rdbSelection)
     bgroup.add(self.rdbFilter)
+    
   def getUseSelection(self,*args):
     return self.rdbSelection.isSelected()
   def getFieldName(self, *args):

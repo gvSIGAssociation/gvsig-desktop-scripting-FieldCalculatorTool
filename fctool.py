@@ -40,7 +40,7 @@ from org.gvsig.app import ApplicationLocator
 
 class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
     def __init__(self):
-      pass
+      self.working = False
       
     def canQueryByAction(self):
       return True
@@ -65,18 +65,20 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
       return False
       
     def execute(self,actionCommand, *args):
-
-      if gvsig.currentDocument(TableManager.TYPENAME)==None:
+      self.document = gvsig.currentDocument(TableManager.TYPENAME)
+      
+      if self.document==None:
         return
         
       i18nManager = ToolsLocator.getI18nManager()
-      self.store = gvsig.currentDocument(TableManager.TYPENAME).getFeatureStore()
-      ## Analyce pending changes
+      
+      self.store = self.document.getFeatureStore()
+      ## Previusly editing state
       if self.store.isEditing():
         self.editingMode = True
       else:
         self.editingMode = False
-        
+      ## Analyce pending changes
       if self.store.getPendingChangesCount() > 0:
         message = i18nManager.getTranslation("_info_confirm_dialog_field_calculator_commit_changes")
         title = ""
@@ -93,25 +95,21 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
       
       name = i18nManager.getTranslation("_Field_Calculator_Tool")+ ": " + self.store.getName()
       self.taskStatus = ToolsLocator.getTaskStatusManager().createDefaultSimpleTaskStatus("")
-      self.taskStatus.setAutoremove(False)
+      self.taskStatus.setAutoremove(True)
       windowManager = ToolsSwingLocator.getWindowManager()
 
       # Set first column option
       defaultField = None
-      table = gvsig.currentDocument(TableManager.TYPENAME)
-      if table!=None:
-        selected = table.getMainWindow().getTablePanel().getTable().getSelectedColumnsAttributeDescriptor()
+      #table = gvsig.currentDocument(TableManager.TYPENAME)
+      if self.document!=None:
+        selected = self.document.getMainWindow().getTablePanel().getTable().getSelectedColumnsAttributeDescriptor()
         if len(selected)>=1:
           defaultField=selected[0].getName()
           
       # Open tool
-      ## Prepare bind taskTool
-      self.fcTaskStatus = ToolsSwingLocator.getTaskStatusSwingManager().createJTaskStatus()
-      self.fcTaskStatus.setShowRemoveTaskButton(False)
-      #self.fcTaskStatus.setShowProgressLabel(False) #DefaultJTaskStatus
-      self.fcTaskStatus.bind(self.taskStatus)
-      
-      self.tool = FieldCalculatorTool(self.store, self.fcTaskStatus, defaultField)
+
+
+      self.tool = FieldCalculatorTool(self.store, self.taskStatus, defaultField)
 
       self.expBuilder = self.tool.getExpBuilder()
       self.expFilter = self.tool.getExpFilter()
@@ -149,10 +147,13 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
       except Exception, ex:
         logger("Not valid expression"+str(ex), LOGGER_ERROR)
         return
-      table = gvsig.currentDocument(TableManager.TYPENAME)
-      if table!=None:
+      
+      if self.document!=None:
         columnSelected = self.tool.getFieldName()
         useSelection = self.tool.getUseSelection()
+        if self.working:
+          return
+        self.working = True
         thread.start_new_thread(self.process, (columnSelected, self.store, self.expBuilderExpression, self.expFilterExpression, useSelection, self.dialog))
 
     def process(self, columnSelected, store, exp,  expFilter, useSelection, dialog):
@@ -212,24 +213,35 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
           logger("Exception updated features"+str(ex), LOGGER_ERROR) 
 
         finally:
+          #DisposeUtils.disponseQuetly....(fset)
           fset.dispose()
           if self.modeExitTool:
             try:
               store.finishEditing()
             except:
-              store.cancelEditing()
               logger("Not able to save store changes", LOGGER_ERROR) 
+              try:
+                store.cancelEditing()
+              except:
+                logger("Not able to cancel editing", LOGGER_ERROR) 
             if self.editingMode:
-              store.edit()
+              try:
+                store.edit()
+              except:
+                logger("Not able to put store into editing mode", LOGGER_ERROR) 
           else:
-            logger("Field Calculator Tool Applied", LOGGER_INFO)
+            logger("Field Calculator Tool expression applied", LOGGER_INFO)
             if self.editingMode==False:
-              store.finishEditing()
+              try:
+                store.finishEditing()
+              except:
+                logger("Not able to puto layer into editing again", LOGGER_ERROR) 
               
           self.taskStatus.terminate()
           #dialog.setButtonEnabled(WindowManager_v2.BUTTON_CANCEL, True)
           dialog.setButtonEnabled(WindowManager_v2.BUTTON_OK, True)
           dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, True)
+          self.working = False
       
         
 def main(*args):
