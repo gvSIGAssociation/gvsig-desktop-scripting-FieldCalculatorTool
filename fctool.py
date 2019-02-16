@@ -16,7 +16,7 @@ from org.gvsig.fmap.dal.swing import DataSwingManager
 from org.gvsig.tools.swing.api import ToolsSwingLocator
 from org.gvsig.tools.swing.api.windowmanager import WindowManager
 from org.gvsig.expressionevaluator.swing import ExpressionEvaluatorSwingLocator
-
+from org.gvsig.tools.dispose import DisposeUtils
 from org.gvsig.app.project.documents.table import TableDocument
 from org.gvsig.tools.swing.api.windowmanager import WindowManager_v2
 
@@ -61,6 +61,7 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
       #  if columnSelected > 0 and window.getModel().getStore().isEditing():
       #    return True
       #return False
+      
       
     def isVisible(self,action):
       if gvsig.currentDocument(TableManager.TYPENAME)!=None:
@@ -131,9 +132,9 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
       # Action when cancel
       if self.dialog.getAction()==WindowManager_v2.BUTTON_CANCEL:
         try:
-          store.finishEditing()
+          self.store.finishEditing()
           if self.editingMode:
-            store.edit()
+            self.store.edit()
         except:
           pass
         return
@@ -153,101 +154,130 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         return
       
       if self.document!=None:
-        columnSelected = self.tool.getFieldName()
-        useSelection = self.tool.getUseSelection()
+        columnSelectedDescriptor = self.tool.getFieldDescriptor()
+        useFilterType = self.tool.getFilterType()
         if self.working:
           return
-        self.working = True
+        self.working = True # Control working thread
         prefs = readConfigFile()
         if prefs == None:
           self.writeConfigFile(100000, False)
-        thread.start_new_thread(self.process, (columnSelected, self.store, self.expBuilderExpression, self.expFilterExpression, useSelection, self.dialog, prefs))
+        thread.start_new_thread(self.process, (columnSelectedDescriptor, self.store, self.expBuilderExpression, self.expFilterExpression, useFilterType, self.dialog, prefs))
 
-    def process(self, columnSelected, store, exp,  expFilter, useSelection, dialog, prefs):
-        self.taskStatus.restart()
+    def process(self, columnSelectedDescriptor, store, exp,  expFilter, useFilterType, dialog, prefs):
         #dialog.setButtonEnabled(WindowManager_v2.BUTTON_CANCEL, False)
         dialog.setButtonEnabled(WindowManager_v2.BUTTON_OK, False)
         dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, False)
-        try:
-          ftype = store.getDefaultFeatureType()
-          s =  ExpressionEvaluatorLocator.getManager().createSymbolTable()
-          fst = DALLocator.getDataManager().createFeatureSymbolTable()
-          s.addSymbolTable(fst)
-          store.edit()
-          # Create fset
-          if useSelection:
-            fset = store.getSelection()
-            if store.getSelection().getSize()==0:
-              logger("Selection is empty", LOGGER_WARN)
-              return
-          else:
-            if expFilter.getPhrase() != "":
-              fq = store.createFeatureQuery()
-              
-              fq.addFilter(expFilter)
-              fq.retrievesAllAttributes()
-              fset = store.getFeatureSet(fq)
-            else:
-              fset = store.getFeatureSet()
-          
-          # set taskstatus
-          self.taskStatus.setRangeOfValues(0, fset.getSize())
-          self.taskStatus.setCurValue(0)
-          self.taskStatus.add()
-          
-          # Limit of changes before commit
-          limit = prefs["limit_rows_in_memory"]
-          
-          # Update features
-          for f in fset:
-            if self.taskStatus.isCancellationRequested():
-              break
-            fst.setFeature(f)
-            v = exp.execute(s) # value de la expression
-            c = f.getEditable()
-            c.set(columnSelected, v)
-            fset.update(c)
-            #if commitingMode:
-            if limit!=-1 and self.store.getPendingChangesCount() > limit:
-                fset.commitChanges()
-            #self.taskStatus.setCurValue(count)
-            self.taskStatus.incrementCurrentValue()
-          
-        except Exception, ex:
-          ex = sys.exc_info()[1]
-          #ex.__class__.__name__, str(ex)
-          logger("Exception updated features"+str(ex), LOGGER_ERROR) 
+        self.taskStatus.restart()
+        # IF column is calculated:
+        if columnSelectedDescriptor.isComputed():
+          self.updateCalculatedField(columnSelectedDescriptor, store, exp)
+        elif columnSelectedDescriptor.isReadOnly():
+          logger("Field is read only and not calculated", LOGGER_WARN)
+          return
+        else:
+          self.updateRealField(columnSelectedDescriptor, store, exp,  expFilter, useFilterType, dialog, prefs)
+        self.working = False
+        self.taskStatus.terminate()
+        dialog.setButtonEnabled(WindowManager_v2.BUTTON_OK, True)
+        dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, True)
+        
+    def updateCalculatedField(self,columnSelectedDescriptor, store, exp):
+      self.taskStatus.setRangeOfValues(0, 1)
+      self.taskStatus.setCurValue(0)
+      self.taskStatus.add()
+      
+      #Process
+      newComputed = DALLocator.getDataManager().createFeatureAttributeEmulatorExpression(store.getDefaultFeatureType(),exp)
+      newFeatureType = gvsig.createFeatureType(store.getDefaultFeatureType())
+      
+      #DefaultEditableFeatureAttributeDescriptor
+      efd = newFeatureType.getEditableAttributeDescriptor(columnSelectedDescriptor.getName())
+      efd.setFeatureAttributeEmulator(newComputed)
+      store.edit()
+      store.update(newFeatureType)
+      store.commit()
+      self.taskStatus.incrementCurrentValue()
 
-        finally:
-          #DisposeUtils.disponseQuetly....(fset)
-          fset.dispose()
-          if self.modeExitTool:
+    def updateRealField(self,columnSelectedDescriptor, store, exp,  expFilter, useFilterType, dialog, prefs):
+      try:
+        ftype = store.getDefaultFeatureType()
+        s =  ExpressionEvaluatorLocator.getManager().createSymbolTable()
+        fst = DALLocator.getDataManager().createFeatureSymbolTable()
+        s.addSymbolTable(fst)
+        store.edit()
+        # Create fset
+        if useFilterType==0:
+          fset = store.getSelection()
+          if store.getSelection().getSize()==0:
+            logger("Selection is empty", LOGGER_WARN)
+            return
+        elif useFilterType==1:
+          if expFilter.getPhrase() != "":
+            fq = store.createFeatureQuery()
+            fq.addFilter(expFilter)
+            fq.retrievesAllAttributes()
+            fset = store.getFeatureSet(fq)
+          else:
+            fset = store.getFeatureSet()
+        else:
+          fset = store.getFeatureSet()
+        # set taskstatus
+        self.taskStatus.setRangeOfValues(0, fset.getSize())
+        self.taskStatus.setCurValue(0)
+        self.taskStatus.add()
+        
+        # Limit of changes before commit
+        limit = prefs["limit_rows_in_memory"]
+        
+        # Update features
+        for f in fset:
+          if self.taskStatus.isCancellationRequested():
+            break
+          fst.setFeature(f)
+          v = exp.execute(s) # value de la expression
+          c = f.getEditable()
+          c.set(columnSelectedDescriptor.getName(), v)
+          fset.update(c)
+          #if commitingMode:
+          if limit!=-1 and self.store.getPendingChangesCount() > limit:
+              fset.commitChanges()
+          #self.taskStatus.setCurValue(count)
+          self.taskStatus.incrementCurrentValue()
+        
+      except Exception, ex:
+        ex = sys.exc_info()[1]
+        #ex.__class__.__name__, str(ex)
+        logger("Exception updated features"+str(ex), LOGGER_ERROR) 
+
+      finally:
+        DisposeUtils.disposeQuietly(fset)
+        if self.modeExitTool:
+          try:
+            store.finishEditing()
+          except:
+            logger("Not able to save store changes", LOGGER_ERROR) 
+            try:
+              store.cancelEditing()
+            except:
+              logger("Not able to cancel editing", LOGGER_ERROR) 
+          if self.editingMode:
+            try:
+              store.edit()
+            except:
+              logger("Not able to put store into editing mode", LOGGER_ERROR) 
+        else:
+          logger("Field Calculator Tool expression applied", LOGGER_INFO)
+          if self.editingMode==False:
             try:
               store.finishEditing()
             except:
-              logger("Not able to save store changes", LOGGER_ERROR) 
-              try:
-                store.cancelEditing()
-              except:
-                logger("Not able to cancel editing", LOGGER_ERROR) 
-            if self.editingMode:
-              try:
-                store.edit()
-              except:
-                logger("Not able to put store into editing mode", LOGGER_ERROR) 
-          else:
-            logger("Field Calculator Tool expression applied", LOGGER_INFO)
-            if self.editingMode==False:
-              try:
-                store.finishEditing()
-              except:
-                logger("Not able to puto layer into editing again", LOGGER_ERROR) 
-              
-          self.taskStatus.terminate()
-          #dialog.setButtonEnabled(WindowManager_v2.BUTTON_CANCEL, True)
-          dialog.setButtonEnabled(WindowManager_v2.BUTTON_OK, True)
-          dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, True)
-          self.working = False
+              logger("Not able to puto layer into editing again", LOGGER_ERROR) 
+            
+
+        #dialog.setButtonEnabled(WindowManager_v2.BUTTON_CANCEL, True)
+
+        self.working = False
       
         
 def main(*args):

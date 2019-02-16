@@ -14,7 +14,19 @@ from org.gvsig.fmap.dal import DALLocator
 from javax.swing import ButtonGroup
 from javax.swing.event import ChangeListener
 from org.gvsig.tools.swing.api import ToolsSwingLocator
+from java.lang import Object
 
+class TypeFilterCombo(Object):
+  def __init__(self, name, filterType):
+    self.name = name
+    self.filterType = filterType
+  def getName(self):
+    return self.name
+  def getFilterType(self):
+    return self.filterType
+  def toString(self):
+    return self.getName()
+    
 class SelectionRadioChangeListener(ChangeListener):
   def __init__(self, lblSelection):
     self.lblSelection = lblSelection
@@ -48,11 +60,12 @@ class FieldCalculatorTool(FormPanel):
       self.fcTaskStatus.bind(self.taskStatus)
     else:
       self.fcTaskStatus = None
-    # Update
     i18nManager = ToolsLocator.getI18nManager()
+    
+    # Update
     self.lblField.setText(i18nManager.getTranslation("_update_field"))
-    self.lblFilter.setText(i18nManager.getTranslation("_filter_to_apply"))
-    self.lblSelection.setText(i18nManager.getTranslation("_use_selection"))
+    #self.lblFilter.setText()
+    #self.lblSelection.setText()
 
     # Expression
     ## Sample feature
@@ -101,39 +114,51 @@ class FieldCalculatorTool(FormPanel):
     
     self.expFilter.addElement(element)
     
-    # Combo picker
+    # Combo picker field
     self.pickerField = DALSwingLocator.getSwingManager().createAttributeDescriptorPickerController(self.cmbField)
     ftype = self.store.getDefaultFeatureType()
-    newftype = gvsig.createFeatureType()
-    for ft in ftype:
-      if not ft.isComputed():
-        newftype.add(ft)
-    self.pickerField.setFeatureType(newftype)
+    self.pickerField.setFeatureType(ftype)
     if defaultField!=None:
       self.pickerField.set(defaultField)
     else:
       self.pickerField.set(ftype.get(0))
+    # Combo filter type 
+    options = {
+               0:i18nManager.getTranslation("_use_selection"),
+               1:i18nManager.getTranslation("_use_filter"),
+               2:i18nManager.getTranslation("_use_all")
+               }
+    for op in options:
+      self.cmbTypeFilter.addItem(TypeFilterCombo(options[op],op))
     
-    # Radiobutton
-    #print "size:", store.getSelection().getSize()
-    #if store.getSelection().getSize()==0:
-    #  self.rdbSelection.setEnabled(False)
+    if self.store.getSelection().getSize()!=0:
+      self.cmbTypeFilter.setSelectedIndex(0)
+    else:
+      self.cmbTypeFilter.setSelectedIndex(2)
+    # Init defaults
+    self.cmbField_change()
+    self.cmbTypeFilter_change()
+  def cmbField_change(self,*args):
+    if self.pickerField.get().isComputed():
+      self.cmbTypeFilter.setSelectedIndex(2)
+      self.cmbTypeFilter.setEnabled(False)
+    else:
+      self.cmbTypeFilter.setEnabled(True)
     
-    self.rdbFilter.setSelected(True)
-    self.lblSelection.setEnabled(False)
-    self.rdbFilter.addChangeListener(PickerRadioChangeListener(self.lblFilter, self.expFilter))
-    self.rdbSelection.addChangeListener(SelectionRadioChangeListener(self.lblSelection))
-    
-    bgroup = ButtonGroup()
-    #self.rdbFilter.setEnabled(True)
-    
-    bgroup.add(self.rdbSelection)
-    bgroup.add(self.rdbFilter)
-    
-  def getUseSelection(self,*args):
-    return self.rdbSelection.isSelected()
+  def cmbTypeFilter_change(self,*args):
+    if self.expFilter ==None: return
+    if self.cmbTypeFilter.getSelectedItem().getFilterType()==1:
+      self.expFilter.setEnabled(True)
+    else:
+      self.expFilter.setEnabled(False)
+      
+  def getFilterType(self,*args):
+   return self.cmbTypeFilter.getSelectedItem().getFilterType()
+
   def getFieldName(self, *args):
     return self.pickerField.getName()
+  def getFieldDescriptor(self, *args):
+    return self.pickerField.get()
   def getExpBuilder(self, *args):
     return self.expBuilder
   def getExpFilter(self, *args):
