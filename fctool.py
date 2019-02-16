@@ -32,7 +32,7 @@ from java.awt.event import ActionListener
 from org.gvsig.app.project.documents.table import TableManager
 from gvsig import logger
 from gvsig import LOGGER_WARN,LOGGER_INFO,LOGGER_ERROR
-
+from java.lang import Throwable
 import os
 import fieldCalculatorTool
 reload(fieldCalculatorTool)
@@ -130,8 +130,11 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
  
     def actionPerformed(self,*args):
       # Action when cancel
+      i18nManager = ToolsLocator.getI18nManager()
       if self.dialog.getAction()==WindowManager_v2.BUTTON_CANCEL:
         try:
+          if self.working==True:
+            return
           self.store.finishEditing()
           if self.editingMode:
             self.store.edit()
@@ -145,14 +148,35 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
       self.expBuilderExpression = self.expBuilder.getExpression()
       self.expFilterExpression = self.expFilter.get()
 
+      # Checks if initial params are OK
+      ## Expressions
       try:
-        if self.expBuilderExpression.getPhrase()!='' and self.expFilterExpression.getPhrase()!='':
-          codeFilter = self.expBuilderExpression.getCode()
-          codeExp = self.expFilterExpression.getCode()
-      except Exception, ex:
-        logger("Not valid expression"+str(ex), LOGGER_ERROR)
+        #if self.expBuilderExpression.getPhrase()!='':
+        codeFilter = self.expBuilderExpression.getCode()
+      except:
+        ex = str(sys.exc_info()[1])
+        info= i18nManager.getTranslation("_Not_valid_expression")
+        mss = info+str(ex)
+        #info = i18nManager.getTranslation("_Not_valid_expression")+": "+ex[40:95] + (ex[95:] and '..')
+        logger(info, LOGGER_ERROR)
+        self.taskStatus.restart()
+        self.taskStatus.message(info)
+        self.taskStatus.terminate()
         return
-      
+        
+      try:
+        if self.expFilterExpression.getPhrase()!='' and self.tool.getFilterType()==1:
+          codeExp = self.expFilterExpression.getCode()
+      except:
+        ex = str(sys.exc_info()[1])
+        mss= "Not valid filter expression: "+str(ex)
+        info = i18nManager.getTranslation("_Not_valid_filter_expression")+": "+ex[40:95] + (ex[95:] and '..')
+        logger(mss, LOGGER_ERROR)
+        self.taskStatus.restart()
+        self.taskStatus.message(info)
+        self.taskStatus.terminate()
+        return
+      ##
       if self.document!=None:
         columnSelectedDescriptor = self.tool.getFieldDescriptor()
         useFilterType = self.tool.getFilterType()
@@ -165,24 +189,29 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         thread.start_new_thread(self.process, (columnSelectedDescriptor, self.store, self.expBuilderExpression, self.expFilterExpression, useFilterType, self.dialog, prefs))
 
     def process(self, columnSelectedDescriptor, store, exp,  expFilter, useFilterType, dialog, prefs):
-        #dialog.setButtonEnabled(WindowManager_v2.BUTTON_CANCEL, False)
-        dialog.setButtonEnabled(WindowManager_v2.BUTTON_OK, False)
-        dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, False)
-        self.taskStatus.restart()
-        # IF column is calculated:
-        if columnSelectedDescriptor.isComputed():
-          self.updateCalculatedField(columnSelectedDescriptor, store, exp)
-        elif columnSelectedDescriptor.isReadOnly():
-          logger("Field is read only and not computed", LOGGER_WARN)
-          return
-        else:
-          self.updateRealField(columnSelectedDescriptor, store, exp,  expFilter, useFilterType, dialog, prefs)
-        self.working = False
-        self.taskStatus.terminate()
-        dialog.setButtonEnabled(WindowManager_v2.BUTTON_OK, True)
-        dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, True)
+      i18nManager = ToolsLocator.getI18nManager()
+      dialog.setButtonEnabled(WindowManager_v2.BUTTON_OK, False)
+      dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, False)
+      self.taskStatus.restart()
+      # IF column is calculated:
+      if columnSelectedDescriptor.isComputed():
+        self.taskStatus.message(i18nManager.getTranslation("_Field_is_computed"))
+        self.updateCalculatedField(columnSelectedDescriptor, store, exp)
+      elif columnSelectedDescriptor.isReadOnly():
+        logger("Field is read only and not computed", LOGGER_WARN)
+        self.taskStatus.message(i18nManager.getTranslation("_Field_is_read_only_and_not_computed"))
+        return
+      else:
+        self.updateRealField(columnSelectedDescriptor, store, exp,  expFilter, useFilterType, dialog, prefs)
+
+      self.working = False
+      self.taskStatus.terminate()
+      dialog.setButtonEnabled(WindowManager_v2.BUTTON_OK, True)
+      dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, True)
+
         
     def updateCalculatedField(self,columnSelectedDescriptor, store, exp):
+      i18nManager = ToolsLocator.getI18nManager()
       try:
         self.taskStatus.setRangeOfValues(0, 1)
         self.taskStatus.setCurValue(0)
@@ -190,20 +219,34 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         
         #Process
         newComputed = DALLocator.getDataManager().createFeatureAttributeEmulatorExpression(store.getDefaultFeatureType(),exp)
+        
+        #Check if required field is himself
+        for req in newComputed.getRequiredFieldNames():
+          if req == columnSelectedDescriptor.getName():
+            mss = i18nManager.getTranslation("_A_computed_field_can_not_have_itself_as_required_field_in_the_expression")
+            self.taskStatus.message(mss)
+            logger(mss, LOGGER_WARN)
+            raise Throwable(mss)
+        
         newFeatureType = gvsig.createFeatureType(store.getDefaultFeatureType())
         
         #DefaultEditableFeatureAttributeDescriptor
         efd = newFeatureType.getEditableAttributeDescriptor(columnSelectedDescriptor.getName())
         efd.setFeatureAttributeEmulator(newComputed)
+
+        
         try:
           store.edit()
           store.update(newFeatureType)
           store.commit()
           self.taskStatus.incrementCurrentValue()
+          self.taskStatus.message(i18nManager.getTranslation("_Computed_field_updated"))
         except:
-          store.cancelEditing()
+          #store.cancelEditing()
+          self.taskStatus.message(i18nManager.getTranslation("_Computed_field_calculation_has_some_errors"))
           logger("Not able change Emulatore Expression Attribute in Feature Type", LOGGER_ERROR)
-        
+      except:
+        pass
       finally:
         if self.editingMode:
           try:
@@ -212,6 +255,7 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
             logger("Not able to put store into editing mode", LOGGER_ERROR) 
 
     def updateRealField(self,columnSelectedDescriptor, store, exp,  expFilter, useFilterType, dialog, prefs):
+      i18nManager = ToolsLocator.getI18nManager()
       try:
         ftype = store.getDefaultFeatureType()
         s =  ExpressionEvaluatorLocator.getManager().createSymbolTable()
@@ -223,6 +267,7 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
           fset = store.getSelection()
           if store.getSelection().getSize()==0:
             logger("Selection is empty", LOGGER_WARN)
+            self.taskStatus.message(i18nManager.getTranslation("_Selection_is_empty"))
             return
         elif useFilterType==1:
           if expFilter.getPhrase() != "":
@@ -257,10 +302,11 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
           #self.taskStatus.setCurValue(count)
           self.taskStatus.incrementCurrentValue()
         
-      except Exception, ex:
+      #except Exception, ex:
+      except:
         ex = sys.exc_info()[1]
         #ex.__class__.__name__, str(ex)
-        logger("Exception updated features"+str(ex), LOGGER_ERROR) 
+        logger("Exception updated features: "+str(ex), LOGGER_ERROR) 
 
       finally:
         DisposeUtils.disposeQuietly(fset)
