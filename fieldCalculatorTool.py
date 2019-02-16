@@ -113,15 +113,6 @@ class FieldCalculatorTool(FormPanel):
                 self.store)
     
     self.expFilter.addElement(element)
-    
-    # Combo picker field
-    self.pickerField = DALSwingLocator.getSwingManager().createAttributeDescriptorPickerController(self.cmbField)
-    ftype = self.store.getDefaultFeatureType()
-    self.pickerField.setFeatureType(ftype)
-    if defaultField!=None:
-      self.pickerField.set(defaultField)
-    else:
-      self.pickerField.set(ftype.get(0))
     # Combo filter type 
     options = {
                0:i18nManager.getTranslation("_use_selection"),
@@ -135,22 +126,39 @@ class FieldCalculatorTool(FormPanel):
       self.cmbTypeFilter.setSelectedIndex(0)
     else:
       self.cmbTypeFilter.setSelectedIndex(2)
+      
+    # Combo picker field
+    self.pickerField = DALSwingLocator.getSwingManager().createAttributeDescriptorPickerController(self.cmbField)
+    ftype = self.store.getDefaultFeatureType()
+    self.pickerField.setFeatureType(ftype)
+    if defaultField!=None:
+      self.pickerField.set(defaultField)
+    else:
+      self.pickerField.set(ftype.get(0))
+
     # Init defaults
     self.cmbField_change()
     self.cmbTypeFilter_change()
-  def cmbField_change(self,*args):
-    if self.pickerField.get().isComputed():
-      self.cmbTypeFilter.setSelectedIndex(2)
-      self.cmbTypeFilter.setEnabled(False)
-    else:
-      self.cmbTypeFilter.setEnabled(True)
     
+  def cmbField_change(self,*args):
+    try:
+      if self.pickerField.get().isComputed():
+        self.cmbTypeFilter.setSelectedIndex(2)
+        self.cmbTypeFilter.setEnabled(False)
+      else:
+        self.cmbTypeFilter.setEnabled(True)
+    except:
+      pass
+
   def cmbTypeFilter_change(self,*args):
-    if self.expFilter ==None: return
-    if self.cmbTypeFilter.getSelectedItem().getFilterType()==1:
-      self.expFilter.setEnabled(True)
-    else:
-      self.expFilter.setEnabled(False)
+    try:
+      if self.expFilter ==None: return
+      if self.cmbTypeFilter.getSelectedItem().getFilterType()==1:
+        self.expFilter.setEnabled(True)
+      else:
+        self.expFilter.setEnabled(False)
+    except:
+      pass
       
   def getFilterType(self,*args):
    return self.cmbTypeFilter.getSelectedItem().getFilterType()
