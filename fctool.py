@@ -173,7 +173,7 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         if columnSelectedDescriptor.isComputed():
           self.updateCalculatedField(columnSelectedDescriptor, store, exp)
         elif columnSelectedDescriptor.isReadOnly():
-          logger("Field is read only and not calculated", LOGGER_WARN)
+          logger("Field is read only and not computed", LOGGER_WARN)
           return
         else:
           self.updateRealField(columnSelectedDescriptor, store, exp,  expFilter, useFilterType, dialog, prefs)
@@ -183,21 +183,33 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, True)
         
     def updateCalculatedField(self,columnSelectedDescriptor, store, exp):
-      self.taskStatus.setRangeOfValues(0, 1)
-      self.taskStatus.setCurValue(0)
-      self.taskStatus.add()
-      
-      #Process
-      newComputed = DALLocator.getDataManager().createFeatureAttributeEmulatorExpression(store.getDefaultFeatureType(),exp)
-      newFeatureType = gvsig.createFeatureType(store.getDefaultFeatureType())
-      
-      #DefaultEditableFeatureAttributeDescriptor
-      efd = newFeatureType.getEditableAttributeDescriptor(columnSelectedDescriptor.getName())
-      efd.setFeatureAttributeEmulator(newComputed)
-      store.edit()
-      store.update(newFeatureType)
-      store.commit()
-      self.taskStatus.incrementCurrentValue()
+      try:
+        self.taskStatus.setRangeOfValues(0, 1)
+        self.taskStatus.setCurValue(0)
+        self.taskStatus.add()
+        
+        #Process
+        newComputed = DALLocator.getDataManager().createFeatureAttributeEmulatorExpression(store.getDefaultFeatureType(),exp)
+        newFeatureType = gvsig.createFeatureType(store.getDefaultFeatureType())
+        
+        #DefaultEditableFeatureAttributeDescriptor
+        efd = newFeatureType.getEditableAttributeDescriptor(columnSelectedDescriptor.getName())
+        efd.setFeatureAttributeEmulator(newComputed)
+        try:
+          store.edit()
+          store.update(newFeatureType)
+          store.commit()
+          self.taskStatus.incrementCurrentValue()
+        except:
+          store.cancelEditing()
+          logger("Not able change Emulatore Expression Attribute in Feature Type", LOGGER_ERROR)
+        
+      finally:
+        if self.editingMode:
+          try:
+            store.edit()
+          except:
+            logger("Not able to put store into editing mode", LOGGER_ERROR) 
 
     def updateRealField(self,columnSelectedDescriptor, store, exp,  expFilter, useFilterType, dialog, prefs):
       try:
@@ -274,10 +286,6 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
             except:
               logger("Not able to puto layer into editing again", LOGGER_ERROR) 
             
-
-        #dialog.setButtonEnabled(WindowManager_v2.BUTTON_CANCEL, True)
-
-        self.working = False
       
         
 def main(*args):
