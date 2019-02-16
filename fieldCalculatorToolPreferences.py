@@ -8,10 +8,14 @@ from java.util.prefs import Preferences
 from org.gvsig.andami.preferences import StoreException
 from java.awt import Color, SystemColor, Rectangle
 from javax.swing import BorderFactory
+
+from fcutils import readConfigFile
+from fcutils import writeConfigFile
+
 class FCTPanel(FormPanel):
 
-  def __init__(self,prefs):
-      self.prefs = prefs
+  def __init__(self):
+      self.prefs = readConfigFile() # dict of values
       FormPanel.__init__(self, gvsig.getResource(__file__, "fieldCalculatorToolPreferences.xml"))
       self.i18nManager = ToolsLocator.getI18nManager()
       self.lblOptionLimit.setText(self.i18nManager.getTranslation("limit_rows_in_memory"))
@@ -20,11 +24,12 @@ class FCTPanel(FormPanel):
       self.lblExplanation.setText("<html>"+self.i18nManager.getTranslation("specifies_the_limit_rows_in_memory_when_the_program_eval_the_expression")+"</html>")
 
       # Init
-      if prefs!=None:
+      if self.prefs!=None:
         self.initializeDefaults()
       
   def initializeValues(self):
-    limit = self.prefs.getInt("limit_rows_in_memory",-1)
+    self.prefs = readConfigFile()
+    limit = self.prefs["limit_rows_in_memory"]
     if limit==-1:
       self.chbNoLimit.setSelected(True)
       self.txtLimit.setText(self.i18nManager.getTranslation("without_limit"))
@@ -33,7 +38,7 @@ class FCTPanel(FormPanel):
       self.txtLimit.setText(str(limit))
 
   def initializeDefaults(self):
-    limit= self.prefs.getInt("limit_rows_in_memory",-1)
+    limit= self.prefs["limit_rows_in_memory"]
     if limit==-1:
       self.chbNoLimit.setSelected(True)
       self.txtLimit.setText(self.i18nManager.getTranslation("without_limit"))
@@ -65,16 +70,17 @@ class FCTPanel(FormPanel):
     try:
       if self.chbNoLimit.isSelected():
         limit=-1
+        useNoLimit = True
       else:
         limit=int(self.txtLimit.getText())
+        useNoLimit = False
     except Exception,ex:
       StoreException(self.i18nManager.getTranslation("limit_rows_in_memory")+ str(ex))
-    self.prefs.putInt("limit_rows_in_memory", limit)
+    writeConfigFile(limit, useNoLimit)
 
 class FieldCalculatorToolPreferences(AbstractPreferencePage):
-  prefs = Preferences.userRoot().node( "fieldExpressionOptions" )
   def __init__(self):
-      self.fctPanel = FCTPanel(self.prefs)
+      self.fctPanel = FCTPanel()
 
   def getID(self):
     return "FieldCalculatorToolPreferences"
@@ -104,10 +110,18 @@ class FieldCalculatorToolPreferences(AbstractPreferencePage):
   def isResizeable(self):
     return True
 
-    
+def test():
+  print readConfigFile()
+  limit = 100000
+  useNoLimit = True
+  writeConfigFile(limit, useNoLimit)
+  print readConfigFile()
+
 def main(*args):
-    l = FieldCalculatorToolPreferences()
-    p = FCTPanel(None)
-    p.showTool("Visual")
-    print p.getPanel()
-    pass
+  test()
+  return
+  l = FieldCalculatorToolPreferences()
+  p = FCTPanel(None)
+  p.showTool("Visual")
+  print p.getPanel()
+  pass

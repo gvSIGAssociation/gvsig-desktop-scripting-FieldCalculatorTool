@@ -33,10 +33,14 @@ from org.gvsig.app.project.documents.table import TableManager
 from gvsig import logger
 from gvsig import LOGGER_WARN,LOGGER_INFO,LOGGER_ERROR
 
+import os
 import fieldCalculatorTool
 reload(fieldCalculatorTool)
 from fieldCalculatorTool import FieldCalculatorTool
 from org.gvsig.app import ApplicationLocator
+
+
+from fcutils import readConfigFile
 
 class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
     def __init__(self):
@@ -108,7 +112,7 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
           
       # Open tool
 
-
+      #prefs = readConfigFile()
       self.tool = FieldCalculatorTool(self.store, self.taskStatus, defaultField)
 
       self.expBuilder = self.tool.getExpBuilder()
@@ -154,9 +158,12 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         if self.working:
           return
         self.working = True
-        thread.start_new_thread(self.process, (columnSelected, self.store, self.expBuilderExpression, self.expFilterExpression, useSelection, self.dialog))
+        prefs = readConfigFile()
+        if prefs == None:
+          self.writeConfigFile(100000, False)
+        thread.start_new_thread(self.process, (columnSelected, self.store, self.expBuilderExpression, self.expFilterExpression, useSelection, self.dialog, prefs))
 
-    def process(self, columnSelected, store, exp,  expFilter, useSelection, dialog):
+    def process(self, columnSelected, store, exp,  expFilter, useSelection, dialog, prefs):
         self.taskStatus.restart()
         #dialog.setButtonEnabled(WindowManager_v2.BUTTON_CANCEL, False)
         dialog.setButtonEnabled(WindowManager_v2.BUTTON_OK, False)
@@ -189,8 +196,7 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
           self.taskStatus.add()
           
           # Limit of changes before commit
-          prefs = Preferences.userRoot().node("fieldExpressionOptions")
-          limit = prefs.getInt("limit_rows_in_memory", -1)
+          limit = prefs["limit_rows_in_memory"]
           
           # Update features
           for f in fset:

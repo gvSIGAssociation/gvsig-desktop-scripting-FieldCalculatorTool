@@ -36,8 +36,8 @@ def selfRegister():
     "Field Calculator Tool" # Tooltip
   )
   action_show = actionManager.registerAction(action_show)
-  application.addMenu(action_show, "Table/"+i18n.getTranslation("_Field_Calculator_Tool"))
-  application.addTool(action_show, i18n.getTranslation("_Field_Calculator_Tool"))
+  application.addMenu(action_show, "Table/_Field_Calculator_Tool")
+  application.addTool(action_show, "table_tools") #/ )#i18n.getTranslation("_Field_Calculator_Tool"))
 
 def selfRegisterI18n():
   i18nManager = ToolsLocator.getI18nManager()
@@ -49,6 +49,8 @@ def selfRegisterPreferences():
   ep.append("fieldExpression", "",FieldCalculatorToolPreferences())
   
 def main(*args):
+  #print script, dir(script)
+  script.registerDataFolder("FieldCalculatorTool")
   selfRegisterI18n()
   selfRegister()
   selfRegisterPreferences()
