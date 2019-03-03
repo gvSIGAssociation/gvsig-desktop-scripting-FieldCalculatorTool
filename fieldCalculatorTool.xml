@@ -26,7 +26,7 @@
    </super>
    <at name="id">/home/osc/gvSIG/plugins/org.gvsig.scripting.app.mainplugin/2.5.0/scripts/addons/FieldCalculatorTool/fieldCalculatorTool.xml</at>
    <at name="path">addons/FieldCalculatorTool/fieldCalculatorTool.xml</at>
-   <at name="rowspecs">CENTER:6PX:NONE,CENTER:30PX:NONE,CENTER:8PX:NONE,FILL:PREF:GROW(1.0),CENTER:5PX:NONE,CENTER:85PX:NONE</at>
+   <at name="rowspecs">CENTER:6PX:NONE,CENTER:PREF:NONE,CENTER:8PX:NONE,FILL:PREF:GROW(1.0),CENTER:5PX:NONE,CENTER:PREF:NONE</at>
    <at name="colspecs">FILL:6PX:NONE,FILL:PREF:GROW(1.0),FILL:6PX:NONE</at>
    <at name="components">
     <object classname="java.util.LinkedList">
@@ -55,8 +55,8 @@
           <at name="properties">
            <object classname="com.jeta.forms.store.support.PropertyMap">
             <at name="name">pnl1</at>
-            <at name="width">783</at>
-            <at name="height">486</at>
+            <at name="width">659</at>
+            <at name="height">330</at>
            </object>
           </at>
          </object>
@@ -81,7 +81,7 @@
          </at>
          <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
         </super>
-        <at name="id">embedded.128632458</at>
+        <at name="id">embedded.1855259912</at>
         <at name="rowspecs">CENTER:33PX:NONE</at>
         <at name="colspecs">FILL:136PX:NONE,FILL:6PX:NONE,FILL:250PX:NONE,FILL:DEFAULT:GROW(1.0),RIGHT:250PX:NONE</at>
         <at name="components">
@@ -304,9 +304,9 @@
          </at>
          <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
         </super>
-        <at name="id">embedded.1026005165</at>
-        <at name="rowspecs">CENTER:36PX:NONE,CENTER:33PX:NONE,CENTER:6PX:NONE</at>
-        <at name="colspecs">FILL:17PX:NONE,FILL:198PX:NONE,FILL:6PX:NONE,FILL:250PX:GROW(1.0),FILL:DEFAULT:NONE</at>
+        <at name="id">embedded.1852916522</at>
+        <at name="rowspecs">CENTER:PREF:NONE,CENTER:PREF:NONE,CENTER:6PX:NONE</at>
+        <at name="colspecs">FILL:17PX:NONE,FILL:PREF:NONE,FILL:6PX:NONE,FILL:250PX:GROW(1.0),FILL:DEFAULT:NONE</at>
         <at name="components">
          <object classname="java.util.LinkedList">
           <item >
@@ -354,7 +354,7 @@
                   </object>
                  </at>
                  <at name="name">cmbTypeFilter</at>
-                 <at name="width">194</at>
+                 <at name="width">26</at>
                  <at name="items">
                   <object classname="com.jeta.forms.store.properties.ItemsProperty">
                    <at name="name">items</at>
@@ -393,7 +393,7 @@
                <at name="properties">
                 <object classname="com.jeta.forms.store.support.PropertyMap">
                  <at name="name">pnlTaskStatus</at>
-                 <at name="width">745</at>
+                 <at name="width">621</at>
                  <at name="height">12</at>
                 </object>
                </at>
@@ -419,7 +419,7 @@
               </at>
               <at name="componentclass">com.jeta.forms.gui.form.FormComponent</at>
              </super>
-             <at name="id">embedded.326247203</at>
+             <at name="id">embedded.816018294</at>
              <at name="rowspecs">CENTER:DEFAULT:NONE</at>
              <at name="colspecs">FILL:216PX:GROW(1.0),FILL:30PX:NONE</at>
              <at name="components">
@@ -523,7 +523,7 @@
                        </object>
                       </at>
                       <at name="name">txtExp</at>
-                      <at name="width">506</at>
+                      <at name="width">550</at>
                       <at name="height">20</at>
                      </object>
                     </at>
@@ -549,7 +549,7 @@
                    </at>
                   </object>
                  </at>
-                 <at name="name"></at>
+                 <at name="name"/>
                  <at name="fill">
                   <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
                    <at name="name">fill</at>
@@ -631,7 +631,7 @@
               </at>
              </object>
             </at>
-            <at name="name"></at>
+            <at name="name"/>
             <at name="fill">
              <object classname="com.jeta.forms.store.properties.effects.PaintProperty">
               <at name="name">fill</at>

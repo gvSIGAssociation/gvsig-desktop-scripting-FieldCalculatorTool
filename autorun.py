@@ -33,7 +33,7 @@ def selfRegister():
     "tools-field-calculator-tool", # Icon name
     None, # Accelerator
     501100000, # Position 
-    "Field Calculator Tool" # Tooltip
+    "_Field_Calculator_Tool" # Tooltip
   )
   action_show = actionManager.registerAction(action_show)
   application.addMenu(action_show, "Table/_Field_Calculator_Tool")
