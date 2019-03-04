@@ -163,10 +163,13 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         self.taskStatus.message(info)
         self.taskStatus.terminate()
         return
-        
-      try:
-        if self.expFilterExpression.getPhrase()!='' and self.tool.getFilterType()==1:
-          codeExp = self.expFilterExpression.getCode()
+      ## Check validity of the Filter expression
+      try: 
+        if self.tool.getFilterType()==1:
+         if self.expFilterExpression!=None:
+           if not self.expFilterExpression.isPhraseEmpty():
+             if not self.expFilterExpression.isEmpty():
+               codeExp = self.expFilterExpression.getCode()
       except:
         ex = str(sys.exc_info()[1])
         mss= "Not valid filter expression: "+str(ex)
@@ -270,7 +273,7 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
             self.taskStatus.message(i18nManager.getTranslation("_Selection_is_empty"))
             return
         elif useFilterType==1:
-          if expFilter.getPhrase() != "":
+          if expFilter!=None and not expFilter.isPhraseEmpty() and not expFilter.isEmpty():
             fq = store.createFeatureQuery()
             fq.addFilter(expFilter)
             fq.retrievesAllAttributes()
@@ -302,14 +305,16 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
           #self.taskStatus.setCurValue(count)
           self.taskStatus.incrementCurrentValue()
         
-      #except Exception, ex:
       except:
         ex = sys.exc_info()[1]
         #ex.__class__.__name__, str(ex)
         logger("Exception updated features: "+str(ex), LOGGER_ERROR) 
 
       finally:
-        DisposeUtils.disposeQuietly(fset)
+        try:
+          DisposeUtils.disposeQuietly(fset)
+        except:
+          logger("Not able to dispone fset", LOGGER_ERROR) 
         if self.modeExitTool:
           try:
             store.finishEditing()
