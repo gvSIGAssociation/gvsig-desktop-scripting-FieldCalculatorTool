@@ -1,11 +1,11 @@
 #
-#Sat Feb 16 17:22:46 CET 2019
+#Sun Mar 03 13:11:40 CET 2019
 owner=gvSIG Association
 code=FieldCalculatorTool
 java-version=j1_7
 official=true
 type=Script
-version=1.0.0-9
+version=1.0.0-10
 state=testing
 operating-system=all
 dependencies=
@@ -16,7 +16,7 @@ model-version=1.0.1
 categories=Table
 description=Tool to calculate fields with the expression builder tool.
 owner-url=
-buildNumber=9
-download-url=https\://github.com/gvSIGAssociation/gvsig-desktop-scripting-FieldCalculatorTool/releases/download/1.0.0-9/gvSIG-desktop-2.5.0-FieldCalculatorTool-1.0.0-9-testing-all-all-j1_7.gvspkg
+buildNumber=10
+download-url=https\://github.com/gvSIGAssociation/gvsig-desktop-scripting-FieldCalculatorTool/releases/download/1.0.0-10/gvSIG-desktop-2.5.0-FieldCalculatorTool-1.0.0-10-testing-all-all-j1_7.gvspkg
 gvSIG-version=2.5.0
 name=Tools\: Field calculator Tool
