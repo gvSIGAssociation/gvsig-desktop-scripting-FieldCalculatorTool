@@ -265,6 +265,7 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         fst = DALLocator.getDataManager().createFeatureSymbolTable()
         s.addSymbolTable(fst)
         store.edit()
+        #store.beginComplexNotification() #beginEditingGroup("field-calculator-update")
         # Create fset
         if useFilterType==0:
           fset = store.getSelection()
@@ -311,6 +312,7 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         logger("Exception updated features: "+str(ex), LOGGER_ERROR) 
 
       finally:
+        #store.endEditingGroup()
         try:
           DisposeUtils.disposeQuietly(fset)
         except:

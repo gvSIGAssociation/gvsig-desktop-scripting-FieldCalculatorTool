@@ -64,8 +64,6 @@ class FieldCalculatorTool(FormPanel):
     
     # Update
     self.lblField.setText(i18nManager.getTranslation("_update_field"))
-    #self.lblFilter.setText()
-    #self.lblSelection.setText()
 
     # Expression
     ## Sample feature
@@ -86,12 +84,16 @@ class FieldCalculatorTool(FormPanel):
       self.expBuilder.setPreviewSymbolTable(featureSymbolTable.createParent())
       
     #self.expBuilder.addSymbolTable(DataManager.FEATURE_SYMBOL_TABLE)
-    swingManager = ExpressionEvaluatorSwingLocator.getManager()
-    element = swingManager.createElement(
-                DataSwingManager.FEATURE_STORE_EXPRESSION_ELEMENT,
-                self.expBuilder,
-                self.store)
-    self.expBuilder.addElement(element)
+    self.expBuilderStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.expBuilder)
+    self.expBuilder.addElement(self.expBuilderStore)
+    self.expBuilderStore.setFeatureStore(self.store)
+    
+    #swingManager = ExpressionEvaluatorSwingLocator.getManager()
+    #element = swingManager.createElement(
+    #            DataSwingManager.FEATURE_STORE_EXPRESSION_ELEMENT,
+    #            self.expBuilder,
+    #            self.store)
+    #self.expBuilder.addElement(element)
     
     self.pnl1.setLayout(BorderLayout())
     self.pnl1.add(self.expBuilder.asJComponent())
@@ -102,17 +104,21 @@ class FieldCalculatorTool(FormPanel):
       self.pnlTaskStatus.setLayout(BorderLayout())
       self.pnlTaskStatus.add(self.fcTaskStatus.asJComponent())
       self.pnlTaskStatus.updateUI()
-    
+
     # Filter picker
     self.expFilter = ExpressionEvaluatorSwingLocator.getManager().createExpressionPickerController(self.txtExp, self.btnExp)
         
-    swingManager = ExpressionEvaluatorSwingLocator.getManager()
-    element = swingManager.createElement(
-                DataSwingManager.FEATURE_STORE_EXPRESSION_ELEMENT,
-                self.expFilter,
-                self.store)
+    #swingManager = ExpressionEvaluatorSwingLocator.getManager()
+    #element = swingManager.createElement(
+    #            DataSwingManager.FEATURE_STORE_EXPRESSION_ELEMENT,
+    #            self.expFilter,
+    #            self.store)
+    #self.expFilter.addElement(element)
+
+    self.expFilterStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.expFilter)
+    self.expFilter.addElement(self.expFilterStore)
+    self.expFilterStore.setFeatureStore(self.store)
     
-    self.expFilter.addElement(element)
     # Combo filter type 
     options = {
                0:i18nManager.getTranslation("_use_selection"),
