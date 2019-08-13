@@ -83,10 +83,8 @@ class FieldCalculatorTool(FormPanel):
       featureSymbolTable.setFeature(sampleFeature);
       self.expBuilder.setPreviewSymbolTable(featureSymbolTable.createParent())
       
-    #self.expBuilder.addSymbolTable(DataManager.FEATURE_SYMBOL_TABLE)
-    self.expBuilderStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.expBuilder)
+    self.expBuilderStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.store)
     self.expBuilder.addElement(self.expBuilderStore)
-    self.expBuilderStore.setFeatureStore(self.store)
     
     #swingManager = ExpressionEvaluatorSwingLocator.getManager()
     #element = swingManager.createElement(
@@ -115,9 +113,9 @@ class FieldCalculatorTool(FormPanel):
     #            self.store)
     #self.expFilter.addElement(element)
 
-    self.expFilterStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.expFilter)
+    self.expFilterStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.store)
     self.expFilter.addElement(self.expFilterStore)
-    self.expFilterStore.setFeatureStore(self.store)
+    #self.expFilterStore.setFeatureStore(self.store)
     
     # Combo filter type 
     options = {
