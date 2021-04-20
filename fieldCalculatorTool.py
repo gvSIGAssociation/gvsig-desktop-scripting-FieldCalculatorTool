@@ -16,6 +16,12 @@ from javax.swing.event import ChangeListener
 from org.gvsig.tools.swing.api import ToolsSwingLocator
 from java.lang import Object
 
+from java.awt.event import ActionListener
+from org.gvsig.tools.swing.api.bookmarkshistory import ActionEventWithCurrentValue
+from addons.FieldCalculatorTool.fieldCalculatorToolParameters import FieldCalculatorToolParameters
+from org.gvsig.expressionevaluator import ExpressionEvaluatorLocator
+
+
 class TypeFilterCombo(Object):
   def __init__(self, name, filterType):
     self.name = name
@@ -47,9 +53,31 @@ class PickerRadioChangeListener(ChangeListener):
     self.picker.setEnabled(selected)
     self.lblFilter.setEnabled(selected)
 
+class BookmarksAndHistoryListener(ActionListener):
+  def __init__(self, fieldCalculatorToolPanel):
+    self.fieldCalculatorToolPanel = fieldCalculatorToolPanel
+
+  def actionPerformed(self, event):
+    if event.getID()== ActionEventWithCurrentValue.ID_GETVALUE: #GETVALUE, save parameters
+      logger("GETVALUE", LOGGER_INFO)
+      actualParams = self.fieldCalculatorToolPanel.fetch()
+      event.setCurrentValue(actualParams)
+
+    elif event.getID()== ActionEventWithCurrentValue.ID_SETVALUE: #SETVALUE, load parameters
+      logger("SETVALUE", LOGGER_INFO)
+      if event.getCurrentValue() == None:
+        return
+      try:
+        oldParams = event.getCurrentValue()
+        #searchParams = event.getCurrentValue().getCopy()
+      except:
+        logger("Not been able to clone export parameters", LOGGER_WARN)
+        return
+      self.fieldCalculatorToolPanel.clear()
+      self.fieldCalculatorToolPanel.put(oldParams)
+
 class FieldCalculatorTool(FormPanel):
   def __init__(self, store, taskStatus=None, defaultField=None):
-    
     FormPanel.__init__(self,gvsig.getResource(__file__,"fieldCalculatorTool.xml"))
     self.store = store
     self.taskStatus = taskStatus
@@ -64,7 +92,7 @@ class FieldCalculatorTool(FormPanel):
     
     # Update
     self.lblField.setText(i18nManager.getTranslation("_update_field"))
-
+    
     # Expression
     ## Sample feature
     sampleFeature = None
@@ -85,7 +113,7 @@ class FieldCalculatorTool(FormPanel):
       
     self.expBuilderStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.store)
     self.expBuilder.addElement(self.expBuilderStore)
-    
+
     #swingManager = ExpressionEvaluatorSwingLocator.getManager()
     #element = swingManager.createElement(
     #            DataSwingManager.FEATURE_STORE_EXPRESSION_ELEMENT,
@@ -93,10 +121,6 @@ class FieldCalculatorTool(FormPanel):
     #            self.store)
     #self.expBuilder.addElement(element)
     
-    self.pnl1.setLayout(BorderLayout())
-    self.pnl1.add(self.expBuilder.asJComponent())
-    self.pnl1.updateUI()
-
     # Task status
     if self.fcTaskStatus!=None:
       self.pnlTaskStatus.setLayout(BorderLayout())
@@ -130,7 +154,7 @@ class FieldCalculatorTool(FormPanel):
       self.cmbTypeFilter.setSelectedIndex(0)
     else:
       self.cmbTypeFilter.setSelectedIndex(2)
-      
+
     # Combo picker field
     self.pickerField = DALSwingLocator.getSwingManager().createAttributeDescriptorPickerController(self.cmbField)
     ftype = self.store.getDefaultFeatureType()
@@ -140,9 +164,26 @@ class FieldCalculatorTool(FormPanel):
     else:
       self.pickerField.set(ftype.get(0))
 
+    # Add history and bookmarks
+    self.bookmarks = ToolsLocator.getBookmarksAndHistoryManager().getBookmarksGroup("fieldCalculatorTool")
+    self.history = ToolsLocator.getBookmarksAndHistoryManager().getHistoryGroup("fieldCalculatorTool")
+
+    self.bookmarksController = ToolsSwingLocator.getToolsSwingManager().createBookmarksController(self.bookmarks, self.btnBookmarks)
+    self.historyController = ToolsSwingLocator.getToolsSwingManager().createHistoryController(self.history, self.btnHistory)
+
+    #self.historyController.setFilter(None)
+
+    self.historyController.addActionListener(BookmarksAndHistoryListener(self))
+    self.bookmarksController.addActionListener(BookmarksAndHistoryListener(self))
+
     # Init defaults
     self.cmbField_change()
     self.cmbTypeFilter_change()
+
+
+    self.pnl1.setLayout(BorderLayout())
+    self.pnl1.add(self.expBuilder.asJComponent())
+    self.pnl1.updateUI()
     
   def cmbField_change(self,*args):
     try:
@@ -177,6 +218,40 @@ class FieldCalculatorTool(FormPanel):
     return self.expFilter
   def btnClose_click(self,*args):
     self.hide()
+
+  def fetch(self): #Save fieldCalculatorToolParameters 
+    if self.expBuilder.getExpression() != None:
+      fctParameters = FieldCalculatorToolParameters()
+      fctParameters.setName(self.pickerField.getName())
+      fctParameters.setExp(self.expBuilder.getExpression().getPhrase())
+      fctParameters.setComboFilterResults(self.cmbTypeFilter.getSelectedIndex())
+      if self.expFilter.get() != None:
+        fctParameters.setFilterResults(self.expFilter.get().getPhrase())
+      else:
+        fctParameters.setFilterResults(None)
+      return fctParameters
+    else:
+      return None
+
+  def clear(self): #Clear all fieldCalculatorTool elements.
+    self.pickerField.set(None)
+    self.expBuilder.removeAllElements()
+    self.cmbTypeFilter.setSelectedIndex(2)
+    self.expFilter.removeAllElements()
+
+  def put(self, fctParameters): #Put fieldCalculatorToolParameter on his elements
+    expressionEvaluatorManager = ExpressionEvaluatorLocator.getExpressionEvaluatorManager()
+    self.pickerField.set(fctParameters.getName())
+    #construir expresion a partir de String fctParameters.getExp()
+    newExpression = expressionEvaluatorManager.createExpression()
+    newExpression.setPhrase(fctParameters.getExp())
+    self.expBuilder.setExpression(newExpression)
+    self.cmbTypeFilter.setSelectedIndex(fctParameters.getComboFilterResults())
+    newExpFilter = expressionEvaluatorManager.createExpression()
+    newExpFilter.setPhrase(fctParameters.getFilterResults())
+    self.expFilter.set(newExpFilter)
+    self.expFilterStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.store)
+    self.expFilter.addElement(self.expFilterStore)
 
 def main(*args):
   store = gvsig.currentLayer().getFeatureStore()

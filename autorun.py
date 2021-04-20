@@ -13,6 +13,8 @@ from gvsig import getResource
 from org.gvsig.tools import ToolsLocator
 from addons.FieldCalculatorTool.fieldCalculatorToolPreferences import FieldCalculatorToolPreferences
 
+from addons.FieldCalculatorTool.fieldCalculatorToolParameters import FieldCalculatorToolParameters
+
 def selfRegister():
   application = ApplicationLocator.getManager()
   i18n = ToolsLocator.getI18nManager()
@@ -47,6 +49,10 @@ def selfRegisterPreferences():
   extensionPointsManager = ToolsLocator.getExtensionPointManager()
   ep = extensionPointsManager.add("AplicationPreferences", "")
   ep.append("fieldExpression", "",FieldCalculatorToolPreferences())
+
+def selfRegisterPersistence():
+  fctParameters = FieldCalculatorToolParameters()
+  FieldCalculatorToolParameters.registerPersistence(fctParameters)
   
 def main(*args):
   #print script, dir(script)
@@ -54,3 +60,4 @@ def main(*args):
   selfRegisterI18n()
   selfRegister()
   selfRegisterPreferences()
+  selfRegisterPersistence()

@@ -39,8 +39,9 @@ reload(fieldCalculatorTool)
 from fieldCalculatorTool import FieldCalculatorTool
 from org.gvsig.app import ApplicationLocator
 
-
 from fcutils import readConfigFile
+
+from addons.FieldCalculatorTool.fieldCalculatorToolParameters import FieldCalculatorToolParameters
 
 class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
     def __init__(self):
@@ -147,6 +148,18 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         self.modeExitTool=True
       self.expBuilderExpression = self.expBuilder.getExpression()
       self.expFilterExpression = self.expFilter.get()
+
+      fctParameters = FieldCalculatorToolParameters()
+      fctParameters.setName(self.tool.pickerField.getName())
+      if self.tool.expBuilder.getExpression() != None:
+        fctParameters.setExp(self.tool.expBuilder.getExpression().getPhrase())
+        fctParameters.setComboFilterResults(self.tool.cmbTypeFilter.getSelectedIndex())
+        if self.tool.expFilter.get() != None:
+          fctParameters.setFilterResults(self.tool.expFilter.get().getPhrase())
+        else:
+          fctParameters.setFilterResults(None)
+        self.tool.history.add(fctParameters)
+        
 
       # Checks if initial params are OK
       ## Expressions
