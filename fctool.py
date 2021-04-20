@@ -43,6 +43,11 @@ from fcutils import readConfigFile
 
 from addons.FieldCalculatorTool.fieldCalculatorToolParameters import FieldCalculatorToolParameters
 
+import java.lang.Exception
+import java.lang.Throwable
+
+from java.lang import Throwable
+
 class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
     def __init__(self):
       self.working = False
@@ -158,9 +163,25 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
           fctParameters.setFilterResults(self.tool.expFilter.get().getPhrase())
         else:
           fctParameters.setFilterResults(None)
-        self.tool.history.add(fctParameters)
-        
+        try:
+          if self.tool.history.size()==0:
+            self.tool.history.add(fctParameters)
+          else:
+            lastElementHistory=self.tool.history.get(0) #COGE EL PRIMER ELEMENTO, NO EL ULTIMO
+            if fctParameters.toString()!=lastElementHistory.toString():
+              self.tool.history.add(fctParameters)
+            else:
+              logger("NO DONE", LOGGER_INFO)
+        except java.lang.Throwable, ex:
+          logger("Error creando bookmarks1.", LOGGER_WARN, ex)
+          raise ex
+        except:
+          ex = sys.exc_info()[1]
+          logger("Error creando bookmarks2." + str(ex), gvsig.LOGGER_WARN, ex)
+        finally:
+          pass
 
+          
       # Checks if initial params are OK
       ## Expressions
       try:
