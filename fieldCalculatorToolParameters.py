@@ -61,10 +61,6 @@ class FieldCalculatorToolParameters(Persistent):
         definition.addDynFieldString("exp").setMandatory(False)
         definition.addDynFieldInt("comboFilterResults").setMandatory(False)
         definition.addDynFieldString("filterResults").setMandatory(False)
-#              definition.addDynFieldMap("values").setClassOfItems(String.class);
-#              definition.addDynFieldObject("query").setClassOfValue(FeatureQuery.class).setMandatory(false);
-#              definition.addDynFieldString("name").setClassOfValue(String.class);
-#              definition.addDynFieldInt("searchMode").setClassOfValue(Integer.class);
 
   def saveToState(self, state):
     logger("saveToState", LOGGER_INFO)
@@ -73,42 +69,12 @@ class FieldCalculatorToolParameters(Persistent):
     state.setValue("comboFilterResults", self.comboFilterResults)
     state.setValue("filterResults", self.filterResults)
 
-#          HashMap<String, String> valuesMap = new HashMap<>();
-#          for (String key : this.values.keySet()) {
-#              JsonObject value = this.values.get(key);
-#              valuesMap.put(key, value.toString());
-#          }
-#          state.set("values", valuesMap);
-#          state.set("query", this.query);
-#          state.set("name", this.name);
-#          state.set("searchMode", this.searchMode);
-
   def loadFromState(self, state):
     logger("loadFromState", LOGGER_INFO)
     self.name = state.getString("name")
     self.exp = state.getString("exp")
     self.comboFilterResults = state.getInt("comboFilterResults")
     self.filterResults = state.getString("filterResults")
-#          this.resultColumnNames = new ArrayList<>(state.getList("resultColumnNames"));
-#          Map<String, String> valuesState = state.getMap("values");
-#          HashMap<String, JsonObject> valuesMap = new HashMap<>();
-#  
-#          for (String key : valuesState.keySet()) {
-#              String value = valuesState.get(key);
-#              InputStream targetStream = new ByteArrayInputStream(value.getBytes());
-#              JsonReader reader = Json.createReader(targetStream);
-#              JsonObject jsonObject = reader.readObject();
-#              valuesMap.put(key, jsonObject);
-#          }
-#  
-#          this.values = valuesMap;
-#          this.query = (FeatureQuery) state.get("query");
-#          self.name = state.getString("name");
-#          try {
-#              this.searchMode = state.getInt("searchMode");
-#          } catch(Exception ex) {
-#              this.searchMode = DefaultSearchPanel.PANEL_SIMPLIFIED;
-#          }
 
   def getCopy(self):
     try:
@@ -148,15 +114,15 @@ class FieldCalculatorToolParameters(Persistent):
 
         return builder.toString()
       except java.lang.Throwable, ex:
-        logger("Error creando bookmarks1.", LOGGER_WARN, ex)
+        logger("Error creando bookmarks.", LOGGER_WARN, ex)
         raise ex
       except:
         ex = sys.exc_info()[1]
-        logger("Error creando bookmarks2." + str(ex), gvsig.LOGGER_WARN, ex)
+        logger("Error creando bookmarks." + str(ex), gvsig.LOGGER_WARN, ex)
       finally:
         pass
 
     else:
-      logger("Error creando bookmarks3.", LOGGER_WARN)
+      logger("Error creando bookmarks.", LOGGER_WARN)
       return None
 

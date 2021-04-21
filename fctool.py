@@ -129,10 +129,17 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
                 self.tool.asJComponent(),
                 name,
                 None, 
-                WindowManager_v2.BUTTONS_APPLY_OK_CANCEL
+                WindowManager_v2.BUTTON_CANCEL|WindowManager_v2.BUTTON_APPLY
       )
       self.dialog.addActionListener(self)
       self.dialog.show(WindowManager.MODE.WINDOW)
+
+      self.dialog.setButtonLabel(WindowManager_v2.BUTTON_CANCEL, i18nManager.getTranslation("_close"))
+      columnSelectedDescriptor = self.tool.getFieldDescriptor()
+      if columnSelectedDescriptor == None:
+        self.dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, False)
+
+      self.tool.setDialog(self.dialog)
  
     def actionPerformed(self,*args):
       # Action when cancel
@@ -147,41 +154,41 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         except:
           pass
         return
-      # Action with OK or APPLY
+      # Action with APPLY
       self.modeExitTool = False
-      if self.dialog.getAction()==WindowManager_v2.BUTTON_OK:
+      if self.dialog.getAction()==WindowManager_v2.BUTTON_APPLY:
         self.modeExitTool=True
+        fctParameters = FieldCalculatorToolParameters()
+        fctParameters.setName(self.tool.pickerField.getName())
+        if self.tool.expBuilder.getExpression() != None:
+          fctParameters.setExp(self.tool.expBuilder.getExpression().getPhrase())
+          fctParameters.setComboFilterResults(self.tool.cmbTypeFilter.getSelectedIndex())
+          if self.tool.expFilter.get() != None:
+            fctParameters.setFilterResults(self.tool.expFilter.get().getPhrase())
+          else:
+            fctParameters.setFilterResults(None)
+          try:
+            if self.tool.history.size()==0:
+              self.tool.history.add(fctParameters)
+            else:
+              lastElementHistory=self.tool.history.get(0) #COGE EL PRIMER ELEMENTO, NO EL ULTIMO
+              if fctParameters.toString()!=lastElementHistory.toString():
+                self.tool.history.add(fctParameters)
+              else:
+                logger("Same history", LOGGER_INFO)
+          except java.lang.Throwable, ex:
+            logger("Error add history", LOGGER_WARN, ex)
+            raise ex
+          except:
+            ex = sys.exc_info()[1]
+            logger("Error add history" + str(ex), gvsig.LOGGER_WARN, ex)
+          finally:
+            pass
+
+            
       self.expBuilderExpression = self.expBuilder.getExpression()
       self.expFilterExpression = self.expFilter.get()
 
-      fctParameters = FieldCalculatorToolParameters()
-      fctParameters.setName(self.tool.pickerField.getName())
-      if self.tool.expBuilder.getExpression() != None:
-        fctParameters.setExp(self.tool.expBuilder.getExpression().getPhrase())
-        fctParameters.setComboFilterResults(self.tool.cmbTypeFilter.getSelectedIndex())
-        if self.tool.expFilter.get() != None:
-          fctParameters.setFilterResults(self.tool.expFilter.get().getPhrase())
-        else:
-          fctParameters.setFilterResults(None)
-        try:
-          if self.tool.history.size()==0:
-            self.tool.history.add(fctParameters)
-          else:
-            lastElementHistory=self.tool.history.get(0) #COGE EL PRIMER ELEMENTO, NO EL ULTIMO
-            if fctParameters.toString()!=lastElementHistory.toString():
-              self.tool.history.add(fctParameters)
-            else:
-              logger("NO DONE", LOGGER_INFO)
-        except java.lang.Throwable, ex:
-          logger("Error creando bookmarks1.", LOGGER_WARN, ex)
-          raise ex
-        except:
-          ex = sys.exc_info()[1]
-          logger("Error creando bookmarks2." + str(ex), gvsig.LOGGER_WARN, ex)
-        finally:
-          pass
-
-          
       # Checks if initial params are OK
       ## Expressions
       try:
@@ -227,7 +234,6 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
 
     def process(self, columnSelectedDescriptor, store, exp,  expFilter, useFilterType, dialog, prefs):
       i18nManager = ToolsLocator.getI18nManager()
-      dialog.setButtonEnabled(WindowManager_v2.BUTTON_OK, False)
       dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, False)
       self.taskStatus.restart()
       # IF column is calculated:
@@ -372,9 +378,8 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
               store.finishEditing()
             except:
               logger("Not able to puto layer into editing again", LOGGER_ERROR) 
-            
-      
-        
+
+
 def main(*args):
 
   FieldCalculatorToolExtension().execute(None)

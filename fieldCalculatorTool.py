@@ -21,6 +21,10 @@ from org.gvsig.tools.swing.api.bookmarkshistory import ActionEventWithCurrentVal
 from addons.FieldCalculatorTool.fieldCalculatorToolParameters import FieldCalculatorToolParameters
 from org.gvsig.expressionevaluator import ExpressionEvaluatorLocator
 
+from org.gvsig.tools.swing.api import ListElement
+
+from org.gvsig.tools.swing.api.windowmanager import WindowManager_v2
+
 
 class TypeFilterCombo(Object):
   def __init__(self, name, filterType):
@@ -81,6 +85,7 @@ class FieldCalculatorTool(FormPanel):
     FormPanel.__init__(self,gvsig.getResource(__file__,"fieldCalculatorTool.xml"))
     self.store = store
     self.taskStatus = taskStatus
+    self.dialog=None
     ## Prepare bind taskTool
     if taskStatus!=None:
       self.fcTaskStatus = ToolsSwingLocator.getTaskStatusSwingManager().createJTaskStatus()
@@ -156,13 +161,17 @@ class FieldCalculatorTool(FormPanel):
       self.cmbTypeFilter.setSelectedIndex(2)
 
     # Combo picker field
+    #self.cmbField.addItem(None)
     self.pickerField = DALSwingLocator.getSwingManager().createAttributeDescriptorPickerController(self.cmbField)
     ftype = self.store.getDefaultFeatureType()
     self.pickerField.setFeatureType(ftype)
+    #noneElement=ListElement("",None)
+    #self.cmbField.getModel().addElement(noneElement)
+    
     if defaultField!=None:
       self.pickerField.set(defaultField)
     else:
-      self.pickerField.set(ftype.get(0))
+      self.pickerField.set(None)
 
     # Add history and bookmarks
     self.bookmarks = ToolsLocator.getBookmarksAndHistoryManager().getBookmarksGroup("fieldCalculatorTool")
@@ -192,6 +201,7 @@ class FieldCalculatorTool(FormPanel):
         self.cmbTypeFilter.setEnabled(False)
       else:
         self.cmbTypeFilter.setEnabled(True)
+      self.updateEnableApplyButton()
     except:
       pass
 
@@ -242,6 +252,7 @@ class FieldCalculatorTool(FormPanel):
   def put(self, fctParameters): #Put fieldCalculatorToolParameter on his elements
     expressionEvaluatorManager = ExpressionEvaluatorLocator.getExpressionEvaluatorManager()
     self.pickerField.set(fctParameters.getName())
+    self.updateEnableApplyButton()
     #construir expresion a partir de String fctParameters.getExp()
     newExpression = expressionEvaluatorManager.createExpression()
     newExpression.setPhrase(fctParameters.getExp())
@@ -252,6 +263,18 @@ class FieldCalculatorTool(FormPanel):
     self.expFilter.set(newExpFilter)
     self.expFilterStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.store)
     self.expFilter.addElement(self.expFilterStore)
+
+  def setDialog(self,dialog):
+    self.dialog = dialog
+
+  def updateEnableApplyButton(self):
+    if self.dialog == None:
+      return
+    if self.pickerField.get()==None:
+      self.dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, False);
+    else:
+      self.dialog.setButtonEnabled(WindowManager_v2.BUTTON_APPLY, True);
+
 
 def main(*args):
   store = gvsig.currentLayer().getFeatureStore()
