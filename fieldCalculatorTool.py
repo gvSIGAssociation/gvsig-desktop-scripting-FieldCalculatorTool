@@ -114,10 +114,10 @@ class FieldCalculatorTool(FormPanel):
       dataManager = DALLocator.getDataManager()
       featureSymbolTable = dataManager.createFeatureSymbolTable()
       featureSymbolTable.setFeature(sampleFeature);
-      self.expBuilder.setPreviewSymbolTable(featureSymbolTable.createParent())
+      self.expBuilder.getConfig().setPreviewSymbolTable(featureSymbolTable.createParent())
       
     self.expBuilderStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.store)
-    self.expBuilder.addElement(self.expBuilderStore)
+    self.expBuilder.getConfig().addElement(self.expBuilderStore)
 
     #swingManager = ExpressionEvaluatorSwingLocator.getManager()
     #element = swingManager.createElement(
@@ -143,7 +143,7 @@ class FieldCalculatorTool(FormPanel):
     #self.expFilter.addElement(element)
 
     self.expFilterStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.store)
-    self.expFilter.addElement(self.expFilterStore)
+    self.expFilter.getConfig().addElement(self.expFilterStore)
     #self.expFilterStore.setFeatureStore(self.store)
     
     # Combo filter type 
@@ -245,9 +245,9 @@ class FieldCalculatorTool(FormPanel):
 
   def clear(self): #Clear all fieldCalculatorTool elements.
     self.pickerField.set(None)
-    self.expBuilder.removeAllElements()
+    self.expBuilder.getConfig().removeAllElements()
     self.cmbTypeFilter.setSelectedIndex(2)
-    self.expFilter.removeAllElements()
+    self.expFilter.getConfig().removeAllElements()
 
   def put(self, fctParameters): #Put fieldCalculatorToolParameter on his elements
     expressionEvaluatorManager = ExpressionEvaluatorLocator.getExpressionEvaluatorManager()
@@ -262,7 +262,7 @@ class FieldCalculatorTool(FormPanel):
     newExpFilter.setPhrase(fctParameters.getFilterResults())
     self.expFilter.set(newExpFilter)
     self.expFilterStore = DALSwingLocator.getSwingManager().createFeatureStoreElement(self.store)
-    self.expFilter.addElement(self.expFilterStore)
+    self.expFilter.getConfig().addElement(self.expFilterStore)
 
   def setDialog(self,dialog):
     self.dialog = dialog
