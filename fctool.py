@@ -309,6 +309,7 @@ class FieldCalculatorToolExtension(ScriptingExtension, ActionListener):
         # Create fset
         if useFilterType==0:
           fset = store.getSelection()
+          DisposeUtils.bind(fset)
           if store.getSelection().getSize()==0:
             logger("Selection is empty", LOGGER_WARN)
             self.taskStatus.message(i18nManager.getTranslation("_Selection_is_empty"))
