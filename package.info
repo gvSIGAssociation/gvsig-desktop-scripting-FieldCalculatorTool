@@ -1,21 +1,21 @@
 #
-#Wed Apr 21 19:29:21 CEST 2021
+#Fri Jul 28 10:15:39 CEST 2023
 owner=gvSIG Association
 code=FieldCalculatorTool
 java-version=j1_7
-operating-system=all
-description=Tool to calculate fields with the expression builder tool.
 official=true
 type=Script
-web-url=
-version=1.0.0-13
-buildNumber=13
-owner-url=
+version=1.0.0-15
+state=testing
+operating-system=all
 dependencies=
 sources-url=
-name=Tools\: Field calculator Tool
-gvSIG-version=2.6.0
-state=testing
-categories=Table
-model-version=1.0.1
+web-url=
 architecture=all
+model-version=1.0.1
+categories=Table
+description=Tool to calculate fields with the expression builder tool.
+owner-url=
+buildNumber=15
+gvSIG-version=2.6.0
+name=Tools\: Field calculator Tool
