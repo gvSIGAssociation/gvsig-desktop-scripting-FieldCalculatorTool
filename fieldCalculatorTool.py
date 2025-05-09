@@ -97,6 +97,7 @@ class FieldCalculatorTool(FormPanel):
     
     # Update
     self.lblField.setText(i18nManager.getTranslation("_update_field"))
+    self.lblObsoleteWarning.setText(i18nManager.getTranslation(self.lblObsoleteWarning.getText()))
     
     # Expression
     ## Sample feature
